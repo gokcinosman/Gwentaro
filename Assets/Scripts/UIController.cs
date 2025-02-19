@@ -1,14 +1,19 @@
 using TMPro;
-using UnityEngine.UI;
 using UnityEngine;
+using UnityEngine.UI;
 public class UIController : MonoBehaviour
 {
-    [SerializeField] TextMeshProUGUI statusText;
+    public static UIController Instance;
+    [Header("Panels")]
+    [SerializeField] GameObject connectionPanel;
+    [SerializeField] GameObject lobbyPanel;
+    [SerializeField] GameObject inGamePanel;
+    [Header("Buttons")]
+    [SerializeField] Button connectBtn;
     [SerializeField] Button createRoomBtn;
     [SerializeField] Button joinRandomBtn;
-    public static UIController Instance;
-    [SerializeField] GameObject connectPanel;
-    [SerializeField] GameObject lobbyPanel;
+    [Header("Texts")]
+    [SerializeField] TextMeshProUGUI statusText;
     void Awake()
     {
         if (Instance == null)
@@ -21,20 +26,31 @@ public class UIController : MonoBehaviour
             Destroy(gameObject);
         }
     }
-    public void ShowLobbyUI()
+    void Start()
     {
-        connectPanel.SetActive(false);
-        lobbyPanel.SetActive(true);
+        connectBtn.onClick.AddListener(NetworkManager.Instance.ConnectToPhoton);
+        createRoomBtn.onClick.AddListener(NetworkManager.Instance.CreateRoom);
+        joinRandomBtn.onClick.AddListener(NetworkManager.Instance.JoinRandomRoom);
+        ShowConnectionUI();
     }
     public void ShowConnectionUI()
     {
+        connectionPanel.SetActive(true);
         lobbyPanel.SetActive(false);
-        connectPanel.SetActive(true);
+        inGamePanel.SetActive(false);
     }
-    void Start()
+    public void ShowLobbyUI()
     {
-        createRoomBtn.onClick.AddListener(NetworkManager.Instance.CreateRoom);
-        joinRandomBtn.onClick.AddListener(NetworkManager.Instance.JoinRandomRoom);
+        connectionPanel.SetActive(false);
+        lobbyPanel.SetActive(true);
+        inGamePanel.SetActive(false);
+        UpdateStatus("Lobiye bağlandı");
+    }
+    public void ShowInGameUI()
+    {
+        connectionPanel.SetActive(false);
+        lobbyPanel.SetActive(false);
+        inGamePanel.SetActive(true);
     }
     public void UpdateStatus(string message)
     {

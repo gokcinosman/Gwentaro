@@ -110,4 +110,14 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
         UIController.Instance.UpdateStatus($"Oyuncu Sayısı: {PhotonNetwork.CurrentRoom.PlayerCount}/{maxPlayersPerRoom}");
     }
+    public override void OnPlayerLeftRoom(Player otherPlayer)
+    {
+        // Oyuncu çıktığında UI'ı güncelle
+        photonView.RPC("UpdateRoomStatus", RpcTarget.All);
+    }
+    public override void OnLeftRoom()
+    {
+        // Kendi çıkışımızda UI'ı sıfırla
+        UIController.Instance.ShowConnectionUI();
+    }
 }
