@@ -5,13 +5,14 @@ using System.Collections;
 public class NetworkManager : MonoBehaviourPunCallbacks
 {
     public static NetworkManager Instance;
+    [SerializeField] byte maxPlayersPerRoom = 2;
     bool isConnecting;
     void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
-            Debug.Log("NetworkManager initialized");
+            DontDestroyOnLoad(gameObject);
         }
         else
         {
@@ -30,7 +31,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
         if (PhotonNetwork.IsConnected)
         {
-            CreateOrJoinRoom();
+            PhotonNetwork.JoinLobby();
         }
         else
         {
@@ -54,27 +55,23 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
         UIController.Instance.ShowConnectionUI();
     }
-    public void CreateOrJoinRoom()
+    public void CreateRoom()
     {
-        if (PhotonNetwork.IsConnectedAndReady)
+        RoomOptions options = new RoomOptions
         {
-            if (PhotonNetwork.InLobby)
-            {
-                RoomOptions options = new RoomOptions { MaxPlayers = 2 };
-                PhotonNetwork.JoinRandomOrCreateRoom(
-                    expectedMaxPlayers: (byte)options.MaxPlayers,
-                    roomOptions: options
-                );
-            }
-            else
-            {
-                Debug.LogWarning("Lobiye bağlı değil!");
-            }
-        }
-        else
-        {
-            Debug.LogError("Photon bağlantısı hazır değil!");
-        }
+            MaxPlayers = maxPlayersPerRoom,
+            EmptyRoomTtl = 10000 // 10 saniye sonra boş oda silinsin
+        };
+        PhotonNetwork.CreateRoom(null, options);
+    }
+    public void JoinRandomRoom()
+    {
+        PhotonNetwork.JoinRandomRoom();
+    }
+    public override void OnJoinRandomFailed(short returnCode, string message)
+    {
+        Debug.Log("Rastgele oda bulunamadı, yeni oda oluşturuluyor...");
+        CreateRoom();
     }
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
@@ -83,7 +80,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             Debug.LogError("GameManager instance bulunamadı!");
             return;
         }
-        if (PhotonNetwork.CurrentRoom.PlayerCount == 2)
+        if (PhotonNetwork.CurrentRoom.PlayerCount == maxPlayersPerRoom)
         {
             if (GameManager.Instance.photonView != null)
             {
@@ -111,20 +108,6 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     [PunRPC]
     void UpdateRoomStatus()
     {
-        UIController.Instance.UpdateStatus($"Oyuncu Sayısı: {PhotonNetwork.CurrentRoom.PlayerCount}/2");
-    }
-    public override void OnJoinRandomFailed(short returnCode, string message)
-    {
-        Debug.LogError($"Katılamadı: {message}");
-        CreateOrJoinRoom();
-    }
-    public void CreateRoom()
-    {
-        RoomOptions options = new RoomOptions { MaxPlayers = 2 };
-        PhotonNetwork.CreateRoom(null, options);
-    }
-    public void JoinRandomRoom()
-    {
-        PhotonNetwork.JoinRandomRoom();
+        UIController.Instance.UpdateStatus($"Oyuncu Sayısı: {PhotonNetwork.CurrentRoom.PlayerCount}/{maxPlayersPerRoom}");
     }
 }
