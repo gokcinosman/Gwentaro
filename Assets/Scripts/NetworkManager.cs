@@ -5,6 +5,7 @@ using System.Collections;
 public class NetworkManager : MonoBehaviourPunCallbacks
 {
     public static NetworkManager Instance;
+    bool isConnecting;
     void Awake()
     {
         if (Instance == null)
@@ -25,13 +26,33 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
         PhotonNetwork.ConnectUsingSettings();
     }
+    public void ConnectToPhoton()
+    {
+        if (PhotonNetwork.IsConnected)
+        {
+            CreateOrJoinRoom();
+        }
+        else
+        {
+            isConnecting = true;
+            PhotonNetwork.ConnectUsingSettings();
+        }
+    }
     public override void OnConnectedToMaster()
     {
-        PhotonNetwork.JoinLobby();
+        if (isConnecting)
+        {
+            PhotonNetwork.JoinLobby();
+            isConnecting = false;
+        }
     }
     public override void OnJoinedLobby()
     {
-        CreateOrJoinRoom();
+        UIController.Instance.ShowLobbyUI();
+    }
+    public override void OnDisconnected(DisconnectCause cause)
+    {
+        UIController.Instance.ShowConnectionUI();
     }
     public void CreateOrJoinRoom()
     {
@@ -96,5 +117,14 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
         Debug.LogError($"Katılamadı: {message}");
         CreateOrJoinRoom();
+    }
+    public void CreateRoom()
+    {
+        RoomOptions options = new RoomOptions { MaxPlayers = 2 };
+        PhotonNetwork.CreateRoom(null, options);
+    }
+    public void JoinRandomRoom()
+    {
+        PhotonNetwork.JoinRandomRoom();
     }
 }
