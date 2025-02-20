@@ -16,7 +16,11 @@ public class Deck : MonoBehaviour
     {
         for (int i = 0; i < cardsToSpawn; i++)
         {
-            Instantiate(slotPrefab, transform);
+            GameObject slot = Instantiate(slotPrefab, transform);
+            RectTransform slotRect = slot.GetComponent<RectTransform>();
+            slotRect.anchorMin = new Vector2(0, 0.5f);
+            slotRect.anchorMax = new Vector2(0, 0.5f);
+            slotRect.pivot = new Vector2(0.5f, 0.5f);
         }
         rect = GetComponent<RectTransform>();
         cards = GetComponentsInChildren<Card>().ToList();
@@ -29,15 +33,6 @@ public class Deck : MonoBehaviour
             cardCount++;
         }
         StartCoroutine(Frame());
-        IEnumerator Frame()
-        {
-            yield return new WaitForSecondsRealtime(.1f);
-            for (int i = 0; i < cards.Count; i++)
-            {
-                if (cards[i].cardVisual != null)
-                    cards[i].cardVisual.UpdateIndex(transform.childCount);
-            }
-        }
     }
     private void BeginDrag(Card card)
     {
@@ -47,7 +42,13 @@ public class Deck : MonoBehaviour
     {
         if (selectedCard == null)
             return;
-        selectedCard.transform.DOLocalMove(selectedCard.selected ? new Vector3(0, selectedCard.selectionOffset, 0) : Vector3.zero, tweenCardReturn ? .15f : 0).SetEase(Ease.OutBack);
+        selectedCard.transform.DOLocalMove(selectedCard.selected ? new Vector3(0, selectedCard.selectionOffset, 0) : Vector3.zero, tweenCardReturn ? .15f : 0).SetEase(Ease.OutBack).OnComplete(() =>
+        {
+            foreach (Card c in cards)
+            {
+                c.cardVisual.UpdateIndex(cards.Count);
+            }
+        });
         rect.sizeDelta += Vector2.right;
         rect.sizeDelta -= Vector2.right;
         selectedCard = null;
@@ -92,13 +93,23 @@ public class Deck : MonoBehaviour
         cards[index].transform.localPosition = cards[index].selected ? new Vector3(0, cards[index].selectionOffset, 0) : Vector3.zero;
         selectedCard.transform.SetParent(crossedParent);
         isCrossing = false;
-        int selectedIndex = cards.IndexOf(selectedCard);
-        (cards[selectedIndex], cards[index]) = (cards[index], cards[selectedIndex]);
+        if (cards[index].cardVisual == null)
+            return;
         bool swapIsRight = cards[index].ParentIndex() > selectedCard.ParentIndex();
         cards[index].cardVisual.Swap(swapIsRight ? -1 : 1);
+        //Updated Visual Indexes
         foreach (Card card in cards)
         {
             card.cardVisual.UpdateIndex(transform.childCount);
+        }
+    }
+    IEnumerator Frame()
+    {
+        yield return new WaitForEndOfFrame();
+        foreach (Card card in cards)
+        {
+            card.transform.localPosition = Vector3.zero;
+            card.cardVisual?.UpdateIndex(cards.Count);
         }
     }
 }

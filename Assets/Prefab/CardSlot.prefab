@@ -31,7 +31,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7932828346654697543}
-  - {fileID: 3067582496815350407}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -91,6 +90,7 @@ GameObject:
   - component: {fileID: 2785729777315962427}
   - component: {fileID: 3045210691087896000}
   - component: {fileID: 2701790370959320597}
+  - component: {fileID: 6484516301854887976}
   m_Layer: 5
   m_Name: Card
   m_TagString: Untagged
@@ -208,15 +208,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1ff5e345b325584f932a9ae0c24650c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cardVisual: {fileID: 1569089229658347350}
+  cardVisual: {fileID: 6484516301854887976}
   BeginDragEvent:
     m_PersistentCalls:
       m_Calls: []
   EndDragEvent:
     m_PersistentCalls:
       m_Calls: []
+  SelectEvent:
+    m_PersistentCalls:
+      m_Calls: []
   selectionOffset: 50
   selected: 0
+  eventSystem: {fileID: 0}
 --- !u!114 &2701790370959320597
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -232,62 +236,23 @@ MonoBehaviour:
   m_EffectColor: {r: 0, g: 0, b: 0, a: 0.5}
   m_EffectDistance: {x: 10, y: 10}
   m_UseGraphicAlpha: 1
---- !u!1 &6586208697839581071
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 3067582496815350407}
-  - component: {fileID: 6748385555477134428}
-  - component: {fileID: 1569089229658347350}
-  m_Layer: 5
-  m_Name: CardVisual
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &3067582496815350407
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6586208697839581071}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 2873696643767068824}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 155, y: 222}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &6748385555477134428
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6586208697839581071}
-  m_CullTransparentMesh: 1
---- !u!114 &1569089229658347350
+--- !u!114 &6484516301854887976
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6586208697839581071}
+  m_GameObject: {fileID: 6575886424412743620}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2bc15dae502b775479afd4c3dd426edb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  parentCard: {fileID: 3045210691087896000}
+  scaleAnimations: 1
+  scaleOnHover: 1.15
+  scaleOnSelect: 1.25
+  scaleTransition: 0.15
+  scaleEase: 27
   moveSpeed: 0.1
   xOffset: 200
