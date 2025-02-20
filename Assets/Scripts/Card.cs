@@ -5,11 +5,14 @@ using UnityEngine.Events;
 public class Card : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHandler, IBeginDragHandler
 {
     private RectTransform rectTransform;
+    public CardVisual cardVisual;
     private Canvas canvas;
     private bool isDragging = false;
     private Vector2 offset;
     public UnityEvent<Card> BeginDragEvent;
     public UnityEvent<Card> EndDragEvent;
+    public float selectionOffset = 50;
+    public bool selected;
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
@@ -18,7 +21,6 @@ public class Card : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHa
     public void OnBeginDrag(PointerEventData eventData)
     {
         BeginDragEvent.Invoke(this);
-        Debug.Log(isDragging);
         isDragging = true;
         Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         offset = mousePosition - (Vector2)transform.position;
@@ -48,8 +50,22 @@ public class Card : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHa
     public void OnEndDrag(PointerEventData eventData)
     {
         EndDragEvent.Invoke(this);
-        Debug.Log(isDragging);
         isDragging = false;
         rectTransform.localPosition = Vector3.zero;
+    }
+    public void Deselect()
+    {
+        if (selected)
+        {
+            selected = false;
+            // if (selected)
+            //     transform.localPosition += (cardVisual.transform.up * 50);
+            // else
+            //     transform.localPosition = Vector3.zero;
+        }
+    }
+    public int ParentIndex()
+    {
+        return transform.parent.CompareTag("Slot") ? transform.parent.GetSiblingIndex() : 0;
     }
 }
