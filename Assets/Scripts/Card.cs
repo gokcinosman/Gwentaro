@@ -1,17 +1,55 @@
-using Photon.Realtime;
-using Photon.Pun;
 using UnityEngine;
-public class Card : MonoBehaviourPun
+using UnityEngine.UI;
+using UnityEngine.EventSystems;
+using UnityEngine.Events;
+public class Card : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHandler, IBeginDragHandler
 {
-    public int power;
-    public CardType type;
-    public Faction faction;
-    [PunRPC]
-    public void PlayCard(int rowIndex)
+    private RectTransform rectTransform;
+    private Canvas canvas;
+    private bool isDragging = false;
+    private Vector2 offset;
+    public UnityEvent<Card> BeginDragEvent;
+    public UnityEvent<Card> EndDragEvent;
+    private void Awake()
     {
-        // Kart oynama mantığı
-        GameManager.Instance.photonView.RPC("UpdateGameState", RpcTarget.All, rowIndex, power);
+        rectTransform = GetComponent<RectTransform>();
+        canvas = GetComponentInParent<Canvas>();
     }
-    public enum CardType { Unit, Special, Weather }
-    public enum Faction { Northern, Nilfgaardian, Scoiatael, Monster }
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        BeginDragEvent.Invoke(this);
+        Debug.Log(isDragging);
+        isDragging = true;
+        Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        offset = mousePosition - (Vector2)transform.position;
+    }
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        // Tıklama olayını yakalıyoruz
+    }
+    public void OnDrag(PointerEventData eventData)
+    {
+    }
+    private void Update()
+    {
+        if (isDragging)
+        {
+            // Mouse pozisyonunu UI koordinatlarına çeviriyoruz
+            Vector2 position;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            (RectTransform)canvas.transform,
+            Input.mousePosition,
+            canvas.worldCamera,
+            out position);
+            // Objenin pozisyonunu güncelliyoruz
+            rectTransform.position = canvas.transform.TransformPoint(position);
+        }
+    }
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        EndDragEvent.Invoke(this);
+        Debug.Log(isDragging);
+        isDragging = false;
+        rectTransform.localPosition = Vector3.zero;
+    }
 }
