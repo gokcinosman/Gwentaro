@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.Events;
+using DG.Tweening;
 public class Card : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHandler, IBeginDragHandler
 {
     private RectTransform rectTransform;
@@ -13,13 +14,19 @@ public class Card : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHa
     public UnityEvent<Card> EndDragEvent;
     public float selectionOffset = 50;
     public bool selected;
+    private BoardRow currentHoveredRow;
+    private Deck deck;
+    public bool isPlaced = false;
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
         canvas = GetComponentInParent<Canvas>();
+        deck = FindObjectOfType<Deck>();
     }
     public void OnBeginDrag(PointerEventData eventData)
     {
+        if (isPlaced)
+            return;
         BeginDragEvent.Invoke(this);
         isDragging = true;
         Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -31,10 +38,62 @@ public class Card : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHa
     }
     public void OnDrag(PointerEventData eventData)
     {
+        if (isPlaced)
+            return;
+        // Mouse pozisyonunu dünya koordinatlarına çeviriyoruz
+        Vector2 mousePosition;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            (RectTransform)canvas.transform,
+            Input.mousePosition,
+            canvas.worldCamera,
+            out mousePosition);
+        mousePosition = canvas.transform.TransformPoint(mousePosition);
+        // Raycast için contact filter ayarları
+        ContactFilter2D filter = new ContactFilter2D();
+        filter.useTriggers = true;
+        filter.SetLayerMask(LayerMask.GetMask("BoardRow"));
+        // Raycast için hit array
+        RaycastHit2D[] hits = new RaycastHit2D[10];
+        int hitCount = Physics2D.Raycast(mousePosition, Vector2.zero, filter, hits);
+        BoardRow hoveredRow = null;
+        float closestDistance = float.MaxValue;
+        // En yakın BoardRow'u buluyoruz
+        for (int i = 0; i < hitCount; i++)
+        {
+            RaycastHit2D hit = hits[i];
+            BoardRow row = hit.transform.GetComponent<BoardRow>();
+            if (row != null)
+            {
+                float distance = Vector2.Distance(mousePosition, hit.point);
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    hoveredRow = row;
+                }
+            }
+        }
+        // Hover durumunu güncelliyoruz
+        if (hoveredRow != currentHoveredRow)
+        {
+            if (currentHoveredRow != null)
+            {
+                currentHoveredRow.OnCardExit(this);
+            }
+            if (hoveredRow != null)
+            {
+                hoveredRow.OnCardEnter(this);
+            }
+            currentHoveredRow = hoveredRow;
+        }
+        // Kartın pozisyonunu güncelle
+        if (isDragging)
+        {
+            rectTransform.position = mousePosition;
+        }
     }
     private void Update()
     {
-        if (isDragging)
+        if (isDragging && !isPlaced)
         {
             // Mouse pozisyonunu UI koordinatlarına çeviriyoruz
             Vector2 position;
@@ -49,23 +108,56 @@ public class Card : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHa
     }
     public void OnEndDrag(PointerEventData eventData)
     {
-        EndDragEvent.Invoke(this);
+        if (isPlaced)
+            return;
         isDragging = false;
-        rectTransform.localPosition = Vector3.zero;
+        EndDragEvent.Invoke(this);
+        // Eğer bir row'un üzerinde bırakıldıysa
+        if (currentHoveredRow != null)
+        {
+            // Yeni row'a ekle
+            currentHoveredRow.AddCard(this);
+            isPlaced = true;
+            // Referansı temizle
+            BoardRow lastRow = currentHoveredRow;
+            currentHoveredRow = null;
+            // Son row'dan çıkış efektini tetikle
+            lastRow.OnCardExit(this);
+        }
+        else
+        {
+            rectTransform.localPosition = Vector3.zero;
+        }
     }
     public void Deselect()
     {
         if (selected)
         {
             selected = false;
-            // if (selected)
-            //     transform.localPosition += (cardVisual.transform.up * 50);
-            // else
-            //     transform.localPosition = Vector3.zero;
         }
     }
     public int ParentIndex()
     {
         return transform.parent.CompareTag("Slot") ? transform.parent.GetSiblingIndex() : 0;
+    }
+    public void RemoveFromDeck()
+    {
+        deck.RemoveCard(this);
+    }
+    public void ResetPosition()
+    {
+        if (!isPlaced)
+        {
+            // Mevcut parent'ın merkezine dönüş
+            Vector3 targetPosition = selected ?
+                new Vector3(0, selectionOffset, 0) :
+                Vector3.zero;
+            // Animasyonu sadece gerekliyse çalıştır
+            if (transform.localPosition != targetPosition)
+            {
+                transform.DOLocalMove(targetPosition, 0.2f)
+                    .SetEase(Ease.OutQuad);
+            }
+        }
     }
 }

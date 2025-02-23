@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using DG.Tweening;
+using System;
 public class Deck : MonoBehaviour
 {
-    [SerializeField] private List<Card> cards;
+    [NonSerialized] private List<Card> cards;
     [SerializeField] private Card selectedCard;
     [SerializeField] private GameObject slotPrefab;
     [SerializeField] private bool tweenCardReturn = true;
@@ -40,17 +41,23 @@ public class Deck : MonoBehaviour
     }
     void EndDrag(Card card)
     {
-        if (selectedCard == null)
+        if (selectedCard == null || selectedCard.isPlaced)
             return;
-        selectedCard.transform.DOLocalMove(selectedCard.selected ? new Vector3(0, selectedCard.selectionOffset, 0) : Vector3.zero, tweenCardReturn ? .15f : 0).SetEase(Ease.OutBack).OnComplete(() =>
+        if (!selectedCard.isPlaced)
         {
-            foreach (Card c in cards)
-            {
-                c.cardVisual.UpdateIndex(cards.Count);
-            }
-        });
-        rect.sizeDelta += Vector2.right;
-        rect.sizeDelta -= Vector2.right;
+            selectedCard.transform.DOLocalMove(selectedCard.selected ?
+                new Vector3(0, selectedCard.selectionOffset, 0) :
+                Vector3.zero,
+                tweenCardReturn ? .15f : 0)
+                .SetEase(Ease.OutBack)
+                .OnComplete(() =>
+                {
+                    foreach (Card c in cards.Where(c => c != null && !c.isPlaced))
+                    {
+                        c.cardVisual?.UpdateIndex(cards.Count);
+                    }
+                });
+        }
         selectedCard = null;
     }
     void Update()
@@ -111,5 +118,9 @@ public class Deck : MonoBehaviour
             card.transform.localPosition = Vector3.zero;
             card.cardVisual?.UpdateIndex(cards.Count);
         }
+    }
+    public void RemoveCard(Card card)
+    {
+        cards.Remove(card);
     }
 }
