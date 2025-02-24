@@ -545,10 +545,10 @@ MonoBehaviour:
     m_Top: 0
     m_Bottom: 0
   m_ChildAlignment: 4
-  m_Spacing: 20
-  m_ChildForceExpandWidth: 1
+  m_Spacing: 90
+  m_ChildForceExpandWidth: 0
   m_ChildForceExpandHeight: 0
-  m_ChildControlWidth: 1
+  m_ChildControlWidth: 0
   m_ChildControlHeight: 0
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
@@ -565,17 +565,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f09f5826fcb47d24483545c84de6c7f2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cards:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
   selectedCard: {fileID: 0}
   slotPrefab: {fileID: 3040602727110671253, guid: 83ab55464750c6144bc081f7cbd37e33, type: 3}
   tweenCardReturn: 1
-  cardsToSpawn: 10
+  cardsToSpawn: 7
 --- !u!1 &532998595
 GameObject:
   m_ObjectHideFlags: 0
@@ -783,13 +776,13 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 757983428}
+  - component: {fileID: 757983435}
   - component: {fileID: 757983430}
   - component: {fileID: 757983429}
   - component: {fileID: 757983432}
   - component: {fileID: 757983434}
-  - component: {fileID: 757983435}
   m_Layer: 3
-  m_Name: Slot (3)
+  m_Name: BoardRowSiege
   m_TagString: Slot
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -961,6 +954,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d7939eb1a9fd4343baabecda311bd66, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rowType: 0
   cards: []
 --- !u!1 &969129470
 GameObject:
@@ -1073,13 +1067,13 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 974435854}
+  - component: {fileID: 974435861}
   - component: {fileID: 974435856}
   - component: {fileID: 974435855}
   - component: {fileID: 974435858}
   - component: {fileID: 974435860}
-  - component: {fileID: 974435861}
   m_Layer: 3
-  m_Name: Slot (2)
+  m_Name: BoardRowRanged
   m_TagString: Slot
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1251,6 +1245,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d7939eb1a9fd4343baabecda311bd66, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rowType: 0
   cards: []
 --- !u!1 &1185489193
 GameObject:
@@ -1326,13 +1321,13 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1433166224}
+  - component: {fileID: 1433166231}
   - component: {fileID: 1433166226}
   - component: {fileID: 1433166225}
   - component: {fileID: 1433166228}
   - component: {fileID: 1433166230}
-  - component: {fileID: 1433166231}
   m_Layer: 3
-  m_Name: Slot (1)
+  m_Name: BoardRowMelee
   m_TagString: Slot
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1504,6 +1499,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d7939eb1a9fd4343baabecda311bd66, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rowType: 1
   cards: []
 --- !u!1 &1502761775
 GameObject:

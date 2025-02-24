@@ -17,6 +17,7 @@ public class Card : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHa
     private BoardRow currentHoveredRow;
     private Deck deck;
     public bool isPlaced = false;
+    public CardStats cardStats;
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
@@ -25,7 +26,7 @@ public class Card : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHa
     }
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (isPlaced)
+        if (isPlaced || isDragging)
             return;
         BeginDragEvent.Invoke(this);
         isDragging = true;
@@ -75,14 +76,6 @@ public class Card : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHa
         // Hover durumunu güncelliyoruz
         if (hoveredRow != currentHoveredRow)
         {
-            if (currentHoveredRow != null)
-            {
-                currentHoveredRow.OnCardExit(this);
-            }
-            if (hoveredRow != null)
-            {
-                hoveredRow.OnCardEnter(this);
-            }
             currentHoveredRow = hoveredRow;
         }
         // Kartın pozisyonunu güncelle
@@ -112,21 +105,22 @@ public class Card : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHa
             return;
         isDragging = false;
         EndDragEvent.Invoke(this);
-        // Eğer bir row'un üzerinde bırakıldıysa
         if (currentHoveredRow != null)
         {
-            // Yeni row'a ekle
-            currentHoveredRow.AddCard(this);
-            isPlaced = true;
-            // Referansı temizle
-            BoardRow lastRow = currentHoveredRow;
+            bool cardAdded = currentHoveredRow.AddCard(this);
+            if (cardAdded)
+            {
+                isPlaced = true;
+            }
+            else
+            {
+                ResetPosition();
+            }
             currentHoveredRow = null;
-            // Son row'dan çıkış efektini tetikle
-            lastRow.OnCardExit(this);
         }
         else
         {
-            rectTransform.localPosition = Vector3.zero;
+            ResetPosition();
         }
     }
     public void Deselect()
@@ -148,6 +142,8 @@ public class Card : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHa
     {
         if (!isPlaced)
         {
+            isDragging = false;
+            isPlaced = false;
             // Mevcut parent'ın merkezine dönüş
             Vector3 targetPosition = selected ?
                 new Vector3(0, selectionOffset, 0) :

@@ -5,29 +5,20 @@ using DG.Tweening;
 using UnityEngine.UI;
 public class BoardRow : MonoBehaviour
 {
+    public CardType rowType;
     public List<Card> cards = new List<Card>();
-    private Color originalColor;
-    private SpriteRenderer spriteRenderer;
-    private void Awake()
+    public bool AddCard(Card card)
     {
-        spriteRenderer = GetComponent<SpriteRenderer>();
-        if (spriteRenderer != null)
+        if (!cards.Contains(card) && rowType == card.cardStats.cardType)
         {
-            originalColor = spriteRenderer.color;
-        }
-    }
-    public void AddCard(Card card)
-    {
-        if (!cards.Contains(card))
-        {
-            // Önce kartı ekle
             cards.Add(card);
             card.GetComponent<Selectable>().enabled = false;
             card.RemoveFromDeck();
             card.transform.SetParent(transform);
-            // Kartları yeniden düzenle
             RearrangeCards();
+            return true;
         }
+        return false;
     }
     private void RearrangeCards()
     {
@@ -48,25 +39,6 @@ public class BoardRow : MonoBehaviour
             cards[i].transform.DOLocalMove(targetPos, 0.3f)
                 .SetEase(Ease.OutBack)
                 .OnStart(() => cards[i].transform.SetAsLastSibling());
-        }
-    }
-    public void OnCardEnter(Card card)
-    {
-        // Hover efekti
-        if (spriteRenderer != null)
-        {
-            spriteRenderer.color = Color.yellow;
-        }
-    }
-    public void OnCardExit(Card card)
-    {
-    }
-    public void RemoveCard(Card card)
-    {
-        if (cards.Contains(card))
-        {
-            cards.Remove(card);
-            RearrangeCards();
         }
     }
 }

@@ -121,6 +121,30 @@ public class Deck : MonoBehaviour
     }
     public void RemoveCard(Card card)
     {
-        cards.Remove(card);
+        if (cards.Contains(card))
+        {
+            cards.Remove(card);
+            RearrangeRemainingCards();
+        }
+    }
+    private void RearrangeRemainingCards()
+    {
+        if (cards.Count == 0) return;
+        float cardWidth = cards[0].GetComponent<RectTransform>().rect.width;
+        float startX = -((cards.Count - 1) * cardWidth) / 2f;
+        for (int i = 0; i < cards.Count; i++)
+        {
+            if (cards[i] == null || cards[i].isPlaced) continue;
+            Transform targetSlot = transform.GetChild(i);
+            cards[i].transform.SetParent(targetSlot);
+            cards[i].transform.DOLocalMove(Vector3.zero, 0.3f)
+                .SetEase(Ease.OutBack);
+        }
+        // Kullanılmayan slot'ları sağa kaydır
+        for (int i = cards.Count; i < transform.childCount; i++)
+        {
+            Transform slot = transform.GetChild(i);
+            slot.SetAsLastSibling();
+        }
     }
 }
