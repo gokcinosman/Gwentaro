@@ -26,9 +26,28 @@ public class Card : MonoBehaviourPun, IPointerDownHandler, IDragHandler, IEndDra
     {
         photonView = GetComponent<PhotonView>();
         rectTransform = GetComponent<RectTransform>();
-        canvas = GetComponentInParent<Canvas>();
         deck = FindObjectOfType<Deck>();
+
+        if (deck == null)
+        {
+            Debug.LogError("[Card] Deck bileşeni sahnede bulunamadı! Deck'in sahnede aktif olduğundan emin olun.");
+        }
+
+        canvas = GetComponentInParent<Canvas>();
+
+        if (canvas == null)
+        {
+            Debug.LogWarning("[Card] Canvas bulunamadı! Yeni bir Canvas oluşturuluyor...");
+            GameObject newCanvas = new GameObject("AutoCanvas");
+            newCanvas.transform.SetParent(transform.root);
+            canvas = newCanvas.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            newCanvas.AddComponent<CanvasScaler>();
+            newCanvas.AddComponent<GraphicRaycaster>();
+        }
     }
+
+
     public void OnBeginDrag(PointerEventData eventData)
     {
         if (isPlaced || isDragging)
@@ -46,6 +65,11 @@ public class Card : MonoBehaviourPun, IPointerDownHandler, IDragHandler, IEndDra
     {
         if (isPlaced)
             return;
+        if (isPlaced || canvas == null) // Canvas'ın null olup olmadığını kontrol et
+        {
+            Debug.LogError("[Card] OnDrag sırasında Canvas null!");
+            return;
+        }
         // Mouse pozisyonunu dünya koordinatlarına çeviriyoruz
         Vector2 mousePosition;
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
@@ -93,41 +117,54 @@ public class Card : MonoBehaviourPun, IPointerDownHandler, IDragHandler, IEndDra
     {
         if (isDragging && !isPlaced)
         {
-            // Mouse pozisyonunu UI koordinatlarına çeviriyoruz
+            if (canvas == null || rectTransform == null)
+            {
+                Debug.LogError("[Card] Update sırasında canvas veya rectTransform null!");
+                return;
+            }
+
             Vector2 position;
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            (RectTransform)canvas.transform,
-            Input.mousePosition,
-            canvas.worldCamera,
-            out position);
-            // Objenin pozisyonunu güncelliyoruz
+                (RectTransform)canvas.transform,
+                Input.mousePosition,
+                canvas.worldCamera,
+                out position);
+
             rectTransform.position = canvas.transform.TransformPoint(position);
         }
     }
+
     public void OnEndDrag(PointerEventData eventData)
+{
+    if (isPlaced)
+        return;
+
+    isDragging = false;
+    EndDragEvent.Invoke(this);
+
+    if (currentHoveredRow != null)
     {
-        if (isPlaced)
+        int currentPlayerId = PhotonNetwork.LocalPlayer.ActorNumber == 1 ? 0 : 1;
+        int rowIndex = currentHoveredRow.RowIndex; // BoardRow içindeki indeks
+
+        if (rowIndex < 0)
+        {
+            Debug.LogError($"[OnEndDrag] HATALI rowIndex: {rowIndex}. BoardRow yanlış ayarlanmış olabilir.");
+            ResetPosition(); // Kartı geri eski yerine götür
             return;
-
-        isDragging = false;
-        EndDragEvent.Invoke(this);
-
-        if (currentHoveredRow != null)
-        {
-            int currentPlayerId = PhotonNetwork.LocalPlayer.ActorNumber == 1 ? 0 : 1;
-            Debug.Log($"[OnEndDrag] Oyuncu {currentPlayerId} kart oynuyor.");
-
-            // Artık RPC çağrısı yapıyoruz!
-            GameManager.Instance.PlayCard(currentPlayerId, this, currentHoveredRow);
-
-            currentHoveredRow = null;
         }
-        else
-        {
-            ResetPosition();
-        }
+
+        Debug.Log($"[OnEndDrag] Oyuncu {currentPlayerId} kart oynuyor. RowIndex: {rowIndex}");
+
+        GameManager.Instance.PlayCard(currentPlayerId, this, currentHoveredRow);
+        currentHoveredRow = null;
     }
-
+    else
+    {
+        Debug.LogError("[OnEndDrag] currentHoveredRow null! Kart yanlış yere bırakılıyor olabilir.");
+        ResetPosition();
+    }
+}
 
 
 

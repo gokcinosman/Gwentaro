@@ -9,6 +9,8 @@ public class BoardRow : MonoBehaviour
 
     public CardType rowType;
     public List<Card> cards = new List<Card>();
+    public int RowIndex;
+
   public bool AddCard(Card card, int playerId)
 {
     Debug.Log($"[AddCard] Oyuncu {playerId} -> {ownerPlayerId} olan row'a kart eklemeye çalışıyor.");

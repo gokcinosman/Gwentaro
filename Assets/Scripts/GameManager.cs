@@ -20,6 +20,8 @@ public class GameManager : MonoBehaviourPun
     public PlayerManager player2;
     public BoardRow[] player1Rows; // Oyuncu 1'in satırları
     public BoardRow[] player2Rows; // Oyuncu 2'nin satırları
+    public BoardRow[] boardRows; // Eğer eksikse ekle
+
 
     void AssignRows()
     {
@@ -58,8 +60,10 @@ public class GameManager : MonoBehaviourPun
 
 
     }
+
     void Awake()
     {
+        boardRows = FindObjectsOfType<BoardRow>(); // Tüm BoardRow nesnelerini bul
         if (Instance == null)
         {
             Instance = this;
@@ -264,46 +268,35 @@ public class GameManager : MonoBehaviourPun
         return player1.GetHandCount() == 0 && player2.GetHandCount() == 0;
     }
     [PunRPC]
-    public void PlayCardRPC(int playerId, int cardViewID, int rowIndex)
+    void PlayCardRPC(int playerId, int cardViewID, int rowIndex)
     {
-        PhotonView cardPhotonView = PhotonView.Find(cardViewID);
+        GameManager gameManager = FindObjectOfType<GameManager>(); // GameManager'ı al
 
-        if (cardPhotonView == null)
+        if (gameManager == null || gameManager.boardRows == null)
         {
-            Debug.LogError($"[PlayCardRPC] Kart bulunamadı! ViewID: {cardViewID}. Belki de kart senkronize edilmedi?");
+            Debug.LogError("[PlayCardRPC] GameManager veya boardRows null!");
             return;
         }
 
-        Card card = cardPhotonView.GetComponent<Card>();
+        if (rowIndex < 0 || rowIndex >= gameManager.boardRows.Length)
+        {
+            Debug.LogError($"[PlayCardRPC] Geçersiz rowIndex: {rowIndex}. BoardRow dizisinin sınırlarını aşmaya çalışıyor!");
+            return;
+        }
+
+        // Kartı bul
+        Card card = PhotonView.Find(cardViewID)?.GetComponent<Card>();
         if (card == null)
         {
-            Debug.LogError($"[PlayCardRPC] Kart bileşeni bulunamadı! ViewID: {cardViewID}");
+            Debug.LogError($"[PlayCardRPC] Geçersiz cardViewID: {cardViewID}. Kart bulunamadı!");
             return;
         }
 
-        BoardRow row = (playerId == 0) ? GameManager.Instance.player1Rows[rowIndex] : GameManager.Instance.player2Rows[rowIndex];
-        if (row == null)
-        {
-            Debug.LogError($"[PlayCardRPC] Row bulunamadı! Index: {rowIndex}");
-            return;
-        }
-
-        PlayerManager player = playerId == 0 ? GameManager.Instance.player1 : GameManager.Instance.player2;
-        if (player == null)
-        {
-            Debug.LogError($"[PlayCardRPC] Player bulunamadı! PlayerID: {playerId}");
-            return;
-        }
-
-        if (player.PlayCardOnRow(card, row))
-        {
-            Debug.Log($"[PlayCardRPC] Oyuncu {playerId} kart oynadı: {card}");
-        }
-        else
-        {
-            Debug.Log("[PlayCardRPC] Kart oynama başarısız!");
-        }
+        // Geçerli satırı bul ve kartı ekle
+        BoardRow targetRow = gameManager.boardRows[rowIndex];
+        targetRow.AddCard(card, playerId);
     }
+
 
 
     public void PlayCard(int playerId, Card card, BoardRow row)

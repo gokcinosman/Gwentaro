@@ -982,6 +982,7 @@ MonoBehaviour:
   ownerPlayerId: 0
   rowType: 0
   cards: []
+  RowIndex: 2
 --- !u!114 &757983436
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1297,6 +1298,7 @@ MonoBehaviour:
   ownerPlayerId: 0
   rowType: 0
   cards: []
+  RowIndex: 1
 --- !u!114 &974435862
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1575,6 +1577,7 @@ MonoBehaviour:
   ownerPlayerId: 0
   rowType: 1
   cards: []
+  RowIndex: 0
 --- !u!114 &1433166232
 MonoBehaviour:
   m_ObjectHideFlags: 0
