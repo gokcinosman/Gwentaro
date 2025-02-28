@@ -154,13 +154,25 @@ public class GameManager : MonoBehaviourPun
         currentTurnPlayer = playerId;
         Debug.Log($"Tur sırası: Oyuncu {playerId}");
     }
-    public void CheckEndGameCondition()
+   public void CheckEndGameCondition()
+{
+    bool bothPlayersPassed = player1Passed && player2Passed;
+    bool noCardsLeft = CheckIfPlayersHaveNoCards();
+
+    if (bothPlayersPassed || noCardsLeft)
     {
-        if (/* oyuncuların daha oynayacak kartı kalmadıysa veya tur tamamlandıysa */)
-        {
-            EndRound();
-        }
+        EndRound();
     }
+}
+private bool CheckIfPlayersHaveNoCards()
+{
+  //  PlayerManager player1 = GetPlayer(0);
+   // PlayerManager player2 = GetPlayer(1);
+
+    //return player1.HandCount == 0 && player2.HandCount == 0;
+    return true;
+}
+
     public void OnPassButtonClicked()
     {
         if (PhotonNetwork.IsMasterClient)
