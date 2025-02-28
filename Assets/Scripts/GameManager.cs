@@ -1,10 +1,12 @@
 using Photon.Pun;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviourPun
 {
     public static GameManager Instance;
-    private int currentTurnPlayer; // Şu anki turda olan oyuncunun ID'si
+    private int currentTurnPlayer;
+    public int CurrentTurnPlayer => currentTurnPlayer;
     private int[] currentRowPowers = new int[3];
     private int player1Score = 0;
     private int player2Score = 0;
@@ -12,12 +14,39 @@ public class GameManager : MonoBehaviourPun
     private bool gameOver = false;
     private bool player1Passed = false;
     private bool player2Passed = false;
+    public PlayerManager player1;
+    public PlayerManager player2;
+    public BoardRow[] player1Rows; // Oyuncu 1'in satırları
+    public BoardRow[] player2Rows; // Oyuncu 2'nin satırları
+
+    void AssignRows()
+    {
+        foreach (var row in player1Rows)
+        {
+            row.ownerPlayerId = 0;
+            Debug.Log($"[AssignRows] Oyuncu 1 için row atandı: {row.name}");
+        }
+        foreach (var row in player2Rows)
+        {
+            row.ownerPlayerId = 1;
+            Debug.Log($"[AssignRows] Oyuncu 2 için row atandı: {row.name}");
+        }
+    }
 
 
     void Awake()
     {
-        if (Instance == null) Instance = this;
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject); // Sahne değiştiğinde GameManager yok olmasın
+        }
+        else
+        {
+            Destroy(gameObject); // Eğer zaten bir Instance varsa, ikinci bir GameManager oluşmasını engelle
+        }
     }
+
     [PunRPC]
     public void PassTurn(int playerId)
     {
@@ -49,17 +78,54 @@ public class GameManager : MonoBehaviourPun
     {
         if (photonView.IsMine)
         {
+            SetPlayersID(); // Oyuncuların ID'sini belirle
+            AssignRows(); // Satır sahipliklerini belirle
             Debug.Log("Oyun master client tarafından başlatılıyor");
             DealInitialCards();
             DetermineFirstPlayer(); // Kimin başlayacağını belirle
+
+            // SAHNEYİ YÜKLE (Sadece Master Client yapmalı)
+            if (PhotonNetwork.IsMasterClient)
+            {
+                LoadGameScene();
+            }
         }
     }
+
+
+    void LoadGameScene()
+    {
+        if (PhotonNetwork.IsMasterClient) // Sadece Master Client sahneyi değiştirsin
+        {
+            PhotonNetwork.LoadLevel("CardScene"); // Buraya oyun sahnenin ismini yaz (örn. "GameScene")
+        }
+    }
+
+public void SetPlayersID()
+{
+    Debug.Log("SetPlayersID() çağrıldı.");
+
+    GameObject player1Obj = new GameObject("Player1");
+    player1Obj.transform.SetParent(transform); // GameManager’ın altına ekle
+    player1 = player1Obj.AddComponent<PlayerManager>();
+    player1.playerId = 0;
+
+    GameObject player2Obj = new GameObject("Player2");
+    player2Obj.transform.SetParent(transform); // GameManager’ın altına ekle
+    player2 = player2Obj.AddComponent<PlayerManager>();
+    player2.playerId = 1;
+    player1 = player1Obj.GetComponent<PlayerManager>();
+player2 = player2Obj.GetComponent<PlayerManager>();
+    Debug.Log($"[SetPlayersID] Player1: {player1}, Player2: {player2}");
+}
+
+
 
     void DealInitialCards()
     {
         if (PhotonNetwork.IsMasterClient)
         {
-            photonView.RPC("ReceiveCards", RpcTarget.All, 10);
+            // photonView.RPC("ReceiveCards", RpcTarget.All, 10);
         }
     }
 
@@ -72,7 +138,7 @@ public class GameManager : MonoBehaviourPun
         }
     }
 
-  void StartNewRound()
+    void StartNewRound()
     {
         currentRound++;
         player1Passed = false;
@@ -95,6 +161,7 @@ public class GameManager : MonoBehaviourPun
             photonView.RPC("SetTurn", RpcTarget.All, nextPlayer);
         }
     }
+
     public void EndRound()
     {
         if (gameOver) return;
@@ -154,24 +221,43 @@ public class GameManager : MonoBehaviourPun
         currentTurnPlayer = playerId;
         Debug.Log($"Tur sırası: Oyuncu {playerId}");
     }
-   public void CheckEndGameCondition()
-{
-    bool bothPlayersPassed = player1Passed && player2Passed;
-    bool noCardsLeft = CheckIfPlayersHaveNoCards();
-
-    if (bothPlayersPassed || noCardsLeft)
+    public void CheckEndGameCondition()
     {
-        EndRound();
+        bool bothPlayersPassed = player1Passed && player2Passed;
+        bool noCardsLeft = CheckIfPlayersHaveNoCards();
+
+        if (bothPlayersPassed || noCardsLeft)
+        {
+            EndRound();
+        }
+    }
+    private bool CheckIfPlayersHaveNoCards()
+    {
+        return player1.GetHandCount() == 0 && player2.GetHandCount() == 0;
+    }
+  public void PlayCard(int playerId, Card card, BoardRow row)
+{
+    PlayerManager player = playerId == 0 ? player1 : player2;
+
+    if (player == null)
+    {
+        Debug.LogError($"[PlayCard] PlayerManager null! Oyuncu {playerId} için atanmamış.");
+        return;
+    }
+
+    if (player.PlayCardOnRow(card, row))
+    {
+        Debug.Log($"Oyuncu {playerId} kart oynadı: {card}");
+        EndTurn(); // Sıradaki oyuncuya geç
+    }
+    else
+    {
+        Debug.Log("Kart oynama başarısız!");
     }
 }
-private bool CheckIfPlayersHaveNoCards()
-{
-  //  PlayerManager player1 = GetPlayer(0);
-   // PlayerManager player2 = GetPlayer(1);
 
-    //return player1.HandCount == 0 && player2.HandCount == 0;
-    return true;
-}
+
+
 
     public void OnPassButtonClicked()
     {
@@ -181,6 +267,6 @@ private bool CheckIfPlayersHaveNoCards()
             photonView.RPC("PassTurn", RpcTarget.All, playerId);
         }
     }
-   
+
 
 }

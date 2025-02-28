@@ -3,24 +3,25 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.Events;
 using DG.Tweening;
+using Photon.Pun;
 public class Card : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHandler, IBeginDragHandler
 {
     private RectTransform rectTransform;
-    
+
     public CardVisual cardVisual;
     private Canvas canvas;
     private bool isDragging = false;
     private Vector2 offset;
     public UnityEvent<Card> BeginDragEvent;
     public UnityEvent<Card> EndDragEvent;
-    
+
     public float selectionOffset = 50;
     public bool selected;
     private BoardRow currentHoveredRow;
     private Deck deck;
     public bool isPlaced = false;
     public CardStats cardStats;
-    
+
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
@@ -103,29 +104,31 @@ public class Card : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHa
         }
     }
     public void OnEndDrag(PointerEventData eventData)
+{
+    if (isPlaced)
+        return;
+
+    isDragging = false;
+    EndDragEvent.Invoke(this);
+
+    if (currentHoveredRow != null)
     {
-        if (isPlaced)
-            return;
-        isDragging = false;
-        EndDragEvent.Invoke(this);
-        if (currentHoveredRow != null)
-        {
-            bool cardAdded = currentHoveredRow.AddCard(this);
-            if (cardAdded)
-            {
-                isPlaced = true;
-            }
-            else
-            {
-                ResetPosition();
-            }
-            currentHoveredRow = null;
-        }
-        else
-        {
-            ResetPosition();
-        }
+        int currentPlayerId = PhotonNetwork.LocalPlayer.ActorNumber == 1 ? 0 : 1;
+        Debug.Log($"[OnEndDrag] Oyuncu {currentPlayerId} kart oynuyor.");
+
+        // Sadece GameManager'a yönlendir, burada AddCard çağrılmayacak!
+        GameManager.Instance.PlayCard(currentPlayerId, this, currentHoveredRow);
+
+        currentHoveredRow = null;
     }
+    else
+    {
+        ResetPosition();
+    }
+}
+
+
+
     public void Deselect()
     {
         if (selected)
@@ -145,7 +148,7 @@ public class Card : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHa
     {
         if (!isPlaced)
         {
-            
+
             isDragging = false;
             isPlaced = false;
             // Mevcut parent'ın merkezine dönüş
