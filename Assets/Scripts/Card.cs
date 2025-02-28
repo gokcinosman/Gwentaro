@@ -6,18 +6,21 @@ using DG.Tweening;
 public class Card : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHandler, IBeginDragHandler
 {
     private RectTransform rectTransform;
+    
     public CardVisual cardVisual;
     private Canvas canvas;
     private bool isDragging = false;
     private Vector2 offset;
     public UnityEvent<Card> BeginDragEvent;
     public UnityEvent<Card> EndDragEvent;
+    
     public float selectionOffset = 50;
     public bool selected;
     private BoardRow currentHoveredRow;
     private Deck deck;
     public bool isPlaced = false;
     public CardStats cardStats;
+    
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
@@ -142,6 +145,7 @@ public class Card : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHa
     {
         if (!isPlaced)
         {
+            
             isDragging = false;
             isPlaced = false;
             // Mevcut parent'ın merkezine dönüş

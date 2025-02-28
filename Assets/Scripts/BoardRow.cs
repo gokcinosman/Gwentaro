@@ -20,25 +20,24 @@ public class BoardRow : MonoBehaviour
         }
         return false;
     }
-    private void RearrangeCards()
+   private void RearrangeCards()
+{
+    if (cards.Count == 0 || this == null) return;
+    float cardWidth = cards[0].GetComponent<RectTransform>().rect.width;
+    float rowWidth = GetComponent<RectTransform>().rect.width;
+    float startX = -((cards.Count - 1) * cardWidth) / 2f;
+    
+    for (int i = 0; i < cards.Count; i++)
     {
-        if (cards.Count == 0 || this == null) return;
-        float cardWidth = cards[0].GetComponent<RectTransform>().rect.width;
-        float rowWidth = GetComponent<RectTransform>().rect.width;
-        // Merkezden başlayarak sağa doğru ekleme
-        float startX = -((cards.Count - 1) * cardWidth) / 2f;
-        for (int i = 0; i < cards.Count; i++)
-        {
-            if (cards[i] == null) continue;
-            float xPos = startX + (i * cardWidth);
-            Vector3 targetPos = new Vector3(
-                xPos,
-                0,
-                -i * 0.1f
-            );
-            cards[i].transform.DOLocalMove(targetPos, 0.3f)
-                .SetEase(Ease.OutBack)
-                .OnStart(() => cards[i].transform.SetAsLastSibling());
-        }
+        if (cards[i] == null) continue;
+        float xPos = startX + (i * cardWidth);
+        Vector3 targetPos = new Vector3(xPos, 0, -i * 0.1f);
+        
+        // Capture the card reference locally
+        var card = cards[i];
+        card.transform.DOLocalMove(targetPos, 0.3f)
+            .SetEase(Ease.OutBack)
+            .OnStart(() => card.transform.SetAsLastSibling());
     }
+}
 }
