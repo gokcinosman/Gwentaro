@@ -4,37 +4,94 @@ using System.Linq;
 using UnityEngine;
 using DG.Tweening;
 using System;
+using Photon.Pun;
 public class Deck : MonoBehaviour
 {
     [NonSerialized] private List<Card> cards;
     [SerializeField] private Card selectedCard;
     [SerializeField] private GameObject slotPrefab;
     [SerializeField] private bool tweenCardReturn = true;
+    [SerializeField] private PhotonView photonView;
     bool isCrossing = false;
     private RectTransform rect;
     public int cardsToSpawn = 10;
+
     void Start()
     {
-        for (int i = 0; i < cardsToSpawn; i++)
+        if (PhotonNetwork.IsMasterClient)
         {
-            GameObject slot = Instantiate(slotPrefab, transform);
-            RectTransform slotRect = slot.GetComponent<RectTransform>();
-            slotRect.anchorMin = new Vector2(0, 0.5f);
-            slotRect.anchorMax = new Vector2(0, 0.5f);
-            slotRect.pivot = new Vector2(0.5f, 0.5f);
+            cards = new List<Card>();
+
+            for (int i = 0; i < cardsToSpawn; i++)
+            {
+                // Artık Card yerine CardSlot'un ID'sini alıyoruz
+                GameObject newCardSlot = PhotonNetwork.Instantiate("CardPrefab", transform.position, Quaternion.identity);
+                RectTransform slotRect = newCardSlot.GetComponent<RectTransform>();
+                slotRect.anchorMin = new Vector2(0, 0.5f);
+                slotRect.anchorMax = new Vector2(0, 0.5f);
+                slotRect.pivot = new Vector2(0.5f, 0.5f);
+
+                PhotonView slotPhotonView = newCardSlot.GetComponent<PhotonView>();
+
+                if (slotPhotonView != null)
+                {
+                    photonView.RPC("SetCardSlotParent", RpcTarget.AllBuffered, slotPhotonView.ViewID);
+                }
+                else
+                {
+                    Debug.LogError($"[Deck] CardSlot için PhotonView bulunamadı! Index: {i}");
+                }
+
+                Card cardComponent = newCardSlot.GetComponentInChildren<Card>();
+
+                if (cardComponent != null)
+                {
+                    cards.Add(cardComponent);
+                    cardComponent.BeginDragEvent.AddListener(BeginDrag);
+                    cardComponent.EndDragEvent.AddListener(EndDrag);
+                    cardComponent.name = i.ToString();
+                }
+                else
+                {
+                    Debug.LogError($"[Deck] CardSlot içinde Card bileşeni bulunamadı! Index: {i}");
+                }
+            }
         }
-        rect = GetComponent<RectTransform>();
-        cards = GetComponentsInChildren<Card>().ToList();
-        int cardCount = 0;
+        else
+        {
+            StartCoroutine(WaitForCards());
+        }
+
+        StartCoroutine(Frame());
+    }
+
+    [PunRPC]
+    void SetCardSlotParent(int slotViewID)
+    {
+        PhotonView slotPhotonView = PhotonView.Find(slotViewID);
+        if (slotPhotonView != null)
+        {
+            slotPhotonView.transform.SetParent(transform, false);
+            Debug.Log($"[Deck] CardSlot parent olarak ayarlandı: {slotPhotonView.gameObject.name}");
+        }
+        else
+        {
+            Debug.LogError($"[Deck] SetCardSlotParent başarısız! ViewID: {slotViewID}");
+        }
+    }
+
+    IEnumerator WaitForCards()
+    {
+        yield return new WaitForSeconds(1f); // Kartların oluşturulmasını bekle
+
+        cards = FindObjectsOfType<Card>().ToList(); // Tüm sahnedeki kartları al
         foreach (Card card in cards)
         {
             card.BeginDragEvent.AddListener(BeginDrag);
             card.EndDragEvent.AddListener(EndDrag);
-            card.name = cardCount.ToString();
-            cardCount++;
         }
-        StartCoroutine(Frame());
     }
+
     private void BeginDrag(Card card)
     {
         selectedCard = card;

@@ -46,6 +46,11 @@ MonoBehaviour:
   - ReceiveCards
   - SetTurn
   - PassTurn
+  - CloseUI
+  - PlayCardRPC
+  - SetTurnRPC
+  - SetCardParent
+  - SetCardSlotParent
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

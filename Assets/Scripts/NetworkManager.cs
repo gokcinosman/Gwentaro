@@ -8,7 +8,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     [SerializeField] byte maxPlayersPerRoom = 2;
     bool isConnecting;
     void Awake()
-    {
+    {PhotonNetwork.AutomaticallySyncScene = true;
+
         if (Instance == null)
         {
             Instance = this;

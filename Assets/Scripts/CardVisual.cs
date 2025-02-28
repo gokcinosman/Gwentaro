@@ -5,8 +5,7 @@ using UnityEngine.UI;
 public class CardVisual : MonoBehaviour
 {
     private Transform _transform;
-    [SerializeField] private Deck deck;
-    private Card parentCard;
+        private Card parentCard;
     private RectTransform _rectTransform;
     private Vector3 _targetPosition;
     private bool isMoving;

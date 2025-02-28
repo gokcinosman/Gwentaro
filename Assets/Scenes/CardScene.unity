@@ -463,6 +463,7 @@ GameObject:
   - component: {fileID: 462293211}
   - component: {fileID: 462293210}
   - component: {fileID: 462293213}
+  - component: {fileID: 462293214}
   m_Layer: 5
   m_Name: Deck
   m_TagString: Untagged
@@ -568,7 +569,30 @@ MonoBehaviour:
   selectedCard: {fileID: 0}
   slotPrefab: {fileID: 3040602727110671253, guid: 83ab55464750c6144bc081f7cbd37e33, type: 3}
   tweenCardReturn: 1
+  photonView: {fileID: 462293214}
   cardsToSpawn: 7
+--- !u!114 &462293214
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 462293208}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 10
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
 --- !u!1 &532998595
 GameObject:
   m_ObjectHideFlags: 0
@@ -781,6 +805,7 @@ GameObject:
   - component: {fileID: 757983429}
   - component: {fileID: 757983432}
   - component: {fileID: 757983434}
+  - component: {fileID: 757983436}
   m_Layer: 3
   m_Name: BoardRowSiege
   m_TagString: Slot
@@ -957,6 +982,28 @@ MonoBehaviour:
   ownerPlayerId: 0
   rowType: 0
   cards: []
+--- !u!114 &757983436
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 757983427}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 5
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
 --- !u!1 &969129470
 GameObject:
   m_ObjectHideFlags: 0
@@ -1073,6 +1120,7 @@ GameObject:
   - component: {fileID: 974435855}
   - component: {fileID: 974435858}
   - component: {fileID: 974435860}
+  - component: {fileID: 974435862}
   m_Layer: 3
   m_Name: BoardRowRanged
   m_TagString: Slot
@@ -1249,6 +1297,28 @@ MonoBehaviour:
   ownerPlayerId: 0
   rowType: 0
   cards: []
+--- !u!114 &974435862
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 974435853}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 4
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
 --- !u!1 &1185489193
 GameObject:
   m_ObjectHideFlags: 0
@@ -1328,6 +1398,7 @@ GameObject:
   - component: {fileID: 1433166225}
   - component: {fileID: 1433166228}
   - component: {fileID: 1433166230}
+  - component: {fileID: 1433166232}
   m_Layer: 3
   m_Name: BoardRowMelee
   m_TagString: Slot
@@ -1504,6 +1575,28 @@ MonoBehaviour:
   ownerPlayerId: 0
   rowType: 1
   cards: []
+--- !u!114 &1433166232
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1433166223}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 3
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
 --- !u!1 &1502761775
 GameObject:
   m_ObjectHideFlags: 0

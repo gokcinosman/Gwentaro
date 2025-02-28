@@ -11,8 +11,9 @@ GameObject:
   - component: {fileID: 2873696643767068824}
   - component: {fileID: 206049578851501469}
   - component: {fileID: 4396405918308546547}
+  - component: {fileID: 7043603899835832321}
   m_Layer: 5
-  m_Name: CardSlot
+  m_Name: CardPrefab
   m_TagString: Slot
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -76,6 +77,28 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &7043603899835832321
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3040602727110671253}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 0
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
 --- !u!1 &6575886424412743620
 GameObject:
   m_ObjectHideFlags: 0
@@ -91,6 +114,7 @@ GameObject:
   - component: {fileID: 3045210691087896000}
   - component: {fileID: 2701790370959320597}
   - component: {fileID: 6484516301854887976}
+  - component: {fileID: 2029910309370723395}
   m_Layer: 5
   m_Name: Card
   m_TagString: Untagged
@@ -246,6 +270,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2bc15dae502b775479afd4c3dd426edb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  deck: {fileID: 0}
   moveSpeed: 0.1
   xOffset: 200
+--- !u!114 &2029910309370723395
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6575886424412743620}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 0
+  InstantiationId: 0
+  isRuntimeInstantiated: 0

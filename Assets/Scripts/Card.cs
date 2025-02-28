@@ -4,10 +4,10 @@ using UnityEngine.EventSystems;
 using UnityEngine.Events;
 using DG.Tweening;
 using Photon.Pun;
-public class Card : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHandler, IBeginDragHandler
+public class Card : MonoBehaviourPun, IPointerDownHandler, IDragHandler, IEndDragHandler, IBeginDragHandler
 {
     private RectTransform rectTransform;
-
+    private PhotonView photonView;
     public CardVisual cardVisual;
     private Canvas canvas;
     private bool isDragging = false;
@@ -24,6 +24,7 @@ public class Card : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHa
 
     private void Awake()
     {
+        photonView = GetComponent<PhotonView>();
         rectTransform = GetComponent<RectTransform>();
         canvas = GetComponentInParent<Canvas>();
         deck = FindObjectOfType<Deck>();
@@ -104,28 +105,29 @@ public class Card : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHa
         }
     }
     public void OnEndDrag(PointerEventData eventData)
-{
-    if (isPlaced)
-        return;
-
-    isDragging = false;
-    EndDragEvent.Invoke(this);
-
-    if (currentHoveredRow != null)
     {
-        int currentPlayerId = PhotonNetwork.LocalPlayer.ActorNumber == 1 ? 0 : 1;
-        Debug.Log($"[OnEndDrag] Oyuncu {currentPlayerId} kart oynuyor.");
+        if (isPlaced)
+            return;
 
-        // Sadece GameManager'a yönlendir, burada AddCard çağrılmayacak!
-        GameManager.Instance.PlayCard(currentPlayerId, this, currentHoveredRow);
+        isDragging = false;
+        EndDragEvent.Invoke(this);
 
-        currentHoveredRow = null;
+        if (currentHoveredRow != null)
+        {
+            int currentPlayerId = PhotonNetwork.LocalPlayer.ActorNumber == 1 ? 0 : 1;
+            Debug.Log($"[OnEndDrag] Oyuncu {currentPlayerId} kart oynuyor.");
+
+            // Artık RPC çağrısı yapıyoruz!
+            GameManager.Instance.PlayCard(currentPlayerId, this, currentHoveredRow);
+
+            currentHoveredRow = null;
+        }
+        else
+        {
+            ResetPosition();
+        }
     }
-    else
-    {
-        ResetPosition();
-    }
-}
+
 
 
 

@@ -32,8 +32,7 @@ public class PlayerManager : MonoBehaviour
     }
 
 
-
-    public void PassTurn()
+     public void PassTurn()
     {
         hasPassed = true;
         Debug.Log($"Oyuncu {playerId} pas geçti!");
