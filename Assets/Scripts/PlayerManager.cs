@@ -25,14 +25,14 @@ public class PlayerManager : MonoBehaviour
     {
         if (row.ownerPlayerId == playerId) // Eğer row oyuncuya aitse
         {
-            return row.AddCard(card, playerId);
+            //  return row.AddCard(card, playerId);
         }
         Debug.Log($"Bu satır oyuncu {row.ownerPlayerId}’a ait, oyuncu {playerId} buraya kart oynayamaz!");
         return false;
     }
 
 
-     public void PassTurn()
+    public void PassTurn()
     {
         hasPassed = true;
         Debug.Log($"Oyuncu {playerId} pas geçti!");

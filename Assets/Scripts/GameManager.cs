@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Photon.Pun;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -6,6 +7,9 @@ using UnityEngine.UIElements;
 public class GameManager : MonoBehaviourPun
 {
     public static GameManager Instance;
+    public Deck player1Deck;
+    public Deck player2Deck;
+
     public GameObject uiObject;
     private int currentTurnPlayer;
     public int CurrentTurnPlayer => currentTurnPlayer;
@@ -18,11 +22,28 @@ public class GameManager : MonoBehaviourPun
     private bool player2Passed = false;
     public PlayerManager player1;
     public PlayerManager player2;
-    public BoardRow[] player1Rows; // Oyuncu 1'in satırları
-    public BoardRow[] player2Rows; // Oyuncu 2'nin satırları
+    public List<BoardRow> player1Rows = new List<BoardRow>(); // Oyuncu 1'in satırları
+    public List<BoardRow> player2Rows = new List<BoardRow>();
     public BoardRow[] boardRows; // Eğer eksikse ekle
 
 
+    void AssignDecks()
+    {
+        Deck[] allDecks = FindObjectsOfType<Deck>(); // Tüm deckleri bul
+        foreach (var deck in allDecks)
+        {
+            if (deck.ownerPlayerId == 0)
+            {
+                player1Deck = deck;
+                Debug.Log("[AssignDecks] Player 1 için deck atandı.");
+            }
+            else if (deck.ownerPlayerId == 1)
+            {
+                player2Deck = deck;
+                Debug.Log("[AssignDecks] Player 2 için deck atandı.");
+            }
+        }
+    }
     void AssignRows()
     {
         foreach (var row in player1Rows)
@@ -63,16 +84,62 @@ public class GameManager : MonoBehaviourPun
 
     void Awake()
     {
-        boardRows = FindObjectsOfType<BoardRow>(); // Tüm BoardRow nesnelerini bul
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // Sahne değiştiğinde GameManager yok olmasın
+            DontDestroyOnLoad(gameObject); // Sahne değiştiğinde yok olmasın
         }
         else
         {
-            Destroy(gameObject); // Eğer zaten bir Instance varsa, ikinci bir GameManager oluşmasını engelle
+            Destroy(gameObject);
+            return;
         }
+
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    void OnDestroy()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (scene.name == "CardScene")
+        {
+            AssignBoardRows();
+            AssignDecks(); // Deckleri atıyoruz
+        }
+    }
+
+
+    void AssignBoardRows()
+    {
+        boardRows = FindObjectsOfType<BoardRow>();
+        player1Rows.Clear();
+        player2Rows.Clear();
+
+        foreach (var row in boardRows)
+        {
+            Debug.Log($"[AssignBoardRows] Row: {row.name}, Owner: {row.ownerPlayerId}");
+
+            if (row.ownerPlayerId == 0)
+            {
+                player1Rows.Add(row);
+                Debug.Log($"[AssignBoardRows] Player 1 için row eklendi: {row.name}");
+            }
+            else if (row.ownerPlayerId == 1)
+            {
+                player2Rows.Add(row);
+                Debug.Log($"[AssignBoardRows] Player 2 için row eklendi: {row.name}");
+            }
+            else
+            {
+                Debug.LogWarning($"[AssignBoardRows] Sahipsiz row bulundu: {row.name}");
+            }
+        }
+
+        Debug.Log($"[AssignBoardRows] Player 1 Rows: {player1Rows.Count}, Player 2 Rows: {player2Rows.Count}");
     }
 
     [PunRPC]
@@ -270,7 +337,7 @@ public class GameManager : MonoBehaviourPun
     [PunRPC]
     void PlayCardRPC(int playerId, int cardViewID, int rowIndex)
     {
-        GameManager gameManager = FindObjectOfType<GameManager>(); // GameManager'ı al
+        GameManager gameManager = FindObjectOfType<GameManager>();
 
         if (gameManager == null || gameManager.boardRows == null)
         {
@@ -284,7 +351,16 @@ public class GameManager : MonoBehaviourPun
             return;
         }
 
-        // Kartı bul
+        BoardRow targetRow = gameManager.boardRows[rowIndex];
+
+        Debug.Log($"[PlayCardRPC] Player {playerId}, Row Owner: {targetRow.ownerPlayerId}, RowIndex: {rowIndex}");
+
+        if (targetRow.ownerPlayerId != playerId)
+        {
+            Debug.LogError($"[PlayCardRPC] HATA! Player {playerId} yanlış row ({targetRow.ownerPlayerId}) seçti.");
+            return;
+        }
+
         Card card = PhotonView.Find(cardViewID)?.GetComponent<Card>();
         if (card == null)
         {
@@ -292,10 +368,9 @@ public class GameManager : MonoBehaviourPun
             return;
         }
 
-        // Geçerli satırı bul ve kartı ekle
-        BoardRow targetRow = gameManager.boardRows[rowIndex];
         targetRow.AddCard(card, playerId);
     }
+
 
 
 
@@ -307,7 +382,7 @@ public class GameManager : MonoBehaviourPun
             return;
         }
 
-        int rowIndex = (playerId == 0) ? System.Array.IndexOf(player1Rows, row) : System.Array.IndexOf(player2Rows, row);
+        int rowIndex = (playerId == 0) ? player1Rows.IndexOf(row) : player2Rows.IndexOf(row);
         PhotonView cardPhotonView = card.GetComponent<PhotonView>();
 
         if (cardPhotonView == null)

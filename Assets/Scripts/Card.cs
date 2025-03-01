@@ -33,17 +33,17 @@ public class Card : MonoBehaviourPun, IPointerDownHandler, IDragHandler, IEndDra
             Debug.LogError("[Card] Deck bileşeni sahnede bulunamadı! Deck'in sahnede aktif olduğundan emin olun.");
         }
 
-        canvas = GetComponentInParent<Canvas>();
 
+
+
+    }
+    void Start()
+    {
+        canvas = GetComponentInParent<Canvas>();
         if (canvas == null)
         {
-            Debug.LogWarning("[Card] Canvas bulunamadı! Yeni bir Canvas oluşturuluyor...");
-            GameObject newCanvas = new GameObject("AutoCanvas");
-            newCanvas.transform.SetParent(transform.root);
-            canvas = newCanvas.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            newCanvas.AddComponent<CanvasScaler>();
-            newCanvas.AddComponent<GraphicRaycaster>();
+            Debug.LogWarning("[Card] Canvas bulunamadı");
+
         }
     }
 
@@ -135,36 +135,36 @@ public class Card : MonoBehaviourPun, IPointerDownHandler, IDragHandler, IEndDra
     }
 
     public void OnEndDrag(PointerEventData eventData)
-{
-    if (isPlaced)
-        return;
-
-    isDragging = false;
-    EndDragEvent.Invoke(this);
-
-    if (currentHoveredRow != null)
     {
-        int currentPlayerId = PhotonNetwork.LocalPlayer.ActorNumber == 1 ? 0 : 1;
-        int rowIndex = currentHoveredRow.RowIndex; // BoardRow içindeki indeks
-
-        if (rowIndex < 0)
-        {
-            Debug.LogError($"[OnEndDrag] HATALI rowIndex: {rowIndex}. BoardRow yanlış ayarlanmış olabilir.");
-            ResetPosition(); // Kartı geri eski yerine götür
+        if (isPlaced)
             return;
+
+        isDragging = false;
+        EndDragEvent.Invoke(this);
+
+        if (currentHoveredRow != null)
+        {
+            int currentPlayerId = PhotonNetwork.LocalPlayer.ActorNumber == 1 ? 0 : 1;
+            int rowIndex = currentHoveredRow.RowIndex; // BoardRow içindeki indeks
+
+            if (rowIndex < 0)
+            {
+                Debug.LogError($"[OnEndDrag] HATALI rowIndex: {rowIndex}. BoardRow yanlış ayarlanmış olabilir.");
+                ResetPosition(); // Kartı geri eski yerine götür
+                return;
+            }
+
+            Debug.Log($"[OnEndDrag] Oyuncu {currentPlayerId} kart oynuyor. RowIndex: {rowIndex}");
+
+            GameManager.Instance.PlayCard(currentPlayerId, this, currentHoveredRow);
+            currentHoveredRow = null;
         }
-
-        Debug.Log($"[OnEndDrag] Oyuncu {currentPlayerId} kart oynuyor. RowIndex: {rowIndex}");
-
-        GameManager.Instance.PlayCard(currentPlayerId, this, currentHoveredRow);
-        currentHoveredRow = null;
+        else
+        {
+            Debug.LogError("[OnEndDrag] currentHoveredRow null! Kart yanlış yere bırakılıyor olabilir.");
+            ResetPosition();
+        }
     }
-    else
-    {
-        Debug.LogError("[OnEndDrag] currentHoveredRow null! Kart yanlış yere bırakılıyor olabilir.");
-        ResetPosition();
-    }
-}
 
 
 

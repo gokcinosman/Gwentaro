@@ -11,25 +11,24 @@ public class BoardRow : MonoBehaviour
     public List<Card> cards = new List<Card>();
     public int RowIndex;
 
-  public bool AddCard(Card card, int playerId)
-{
-    Debug.Log($"[AddCard] Oyuncu {playerId} -> {ownerPlayerId} olan row'a kart eklemeye çalışıyor.");
-
-    if (playerId == ownerPlayerId && !cards.Contains(card) && rowType == card.cardStats.cardType)
+    public void AddCard(Card card, int playerId)
     {
+        Debug.Log($"[AddCard] Oyuncu {playerId}, ownerPlayerId {ownerPlayerId} olan row'a kart eklemeye çalışıyor.");
+
+        if (playerId != ownerPlayerId)
+        {
+            Debug.LogError($"[AddCard] HATA! Oyuncu {playerId}, kendisine ait olmayan ({ownerPlayerId}) bir satıra kart koyamaz.");
+            return;
+        }
+
+        // Kartı ekleme işlemi
         cards.Add(card);
-        card.GetComponent<Selectable>().enabled = false;
-        card.RemoveFromDeck();
         card.transform.SetParent(transform);
-        RearrangeCards();
-        
-        Debug.Log($"[AddCard] Oyuncu {playerId} kartı başarıyla ekledi.");
-        return true;
+        card.transform.localPosition = Vector3.zero;
+        card.isPlaced = true;
+        Debug.Log("[AddCard] Kart başarıyla eklendi.");
     }
-    
-    Debug.Log("[AddCard] Kart ekleme başarısız!");
-    return false;
-}
+
 
 
     private void RearrangeCards()

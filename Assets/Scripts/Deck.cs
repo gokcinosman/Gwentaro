@@ -15,6 +15,7 @@ public class Deck : MonoBehaviour
     bool isCrossing = false;
     private RectTransform rect;
     public int cardsToSpawn = 10;
+    public int ownerPlayerId;
 
     void Start()
     {
