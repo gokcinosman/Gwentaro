@@ -47,12 +47,41 @@ public class GameManager : MonoBehaviourPun
 
     void AssignDecks()
     {
-        foreach (var deck in FindObjectsOfType<Deck>())
+        Deck[] allDecks = FindObjectsOfType<Deck>();
+        foreach (var deck in allDecks)
         {
-            if (deck.ownerPlayerId == 0) player1Deck = deck;
-            else if (deck.ownerPlayerId == 1) player2Deck = deck;
+            if (deck.ownerPlayerId == 0)
+            {
+                player1Deck = deck;
+            }
+            else if (deck.ownerPlayerId == 1)
+            {
+                player2Deck = deck;
+            }
+        }
+
+        // Eğer desteler otomatik atanmazsa, her oyuncuya özel oluştur
+        if (player1Deck == null)
+        {
+            player1Deck = CreateDeckForPlayer(0);
+        }
+        if (player2Deck == null)
+        {
+            player2Deck = CreateDeckForPlayer(1);
         }
     }
+    Deck CreateDeckForPlayer(int playerId)
+    {
+        GameObject deckObj = new GameObject($"Player{playerId}_Deck");
+        Deck newDeck = deckObj.AddComponent<Deck>();
+        newDeck.ownerPlayerId = playerId;
+
+        // Oyuncuya özel kartlar oluştur
+        newDeck.GenerateDeck(playerId);
+
+        return newDeck;
+    }
+
 
     void AssignBoardRows()
     {

@@ -21,49 +21,72 @@ public class Deck : MonoBehaviour
     {
         if (PhotonNetwork.IsMasterClient)
         {
-            cards = new List<Card>();
-
-            for (int i = 0; i < cardsToSpawn; i++)
-            {
-                // Artık Card yerine CardSlot'un ID'sini alıyoruz
-                GameObject newCardSlot = PhotonNetwork.Instantiate("CardSlot", transform.position, Quaternion.identity);
-                RectTransform slotRect = newCardSlot.GetComponent<RectTransform>();
-                slotRect.anchorMin = new Vector2(0, 0.5f);
-                slotRect.anchorMax = new Vector2(0, 0.5f);
-                slotRect.pivot = new Vector2(0.5f, 0.5f);
-
-                PhotonView slotPhotonView = newCardSlot.GetComponent<PhotonView>();
-
-                if (slotPhotonView != null)
-                {
-                    photonView.RPC("SetCardSlotParent", RpcTarget.AllBuffered, slotPhotonView.ViewID);
-                }
-                else
-                {
-                    Debug.LogError($"[Deck] CardSlot için PhotonView bulunamadı! Index: {i}");
-                }
-
-                Card cardComponent = newCardSlot.GetComponentInChildren<Card>();
-
-                if (cardComponent != null)
-                {
-                    cards.Add(cardComponent);
-                    cardComponent.BeginDragEvent.AddListener(BeginDrag);
-                    cardComponent.EndDragEvent.AddListener(EndDrag);
-                    cardComponent.name = i.ToString();
-                }
-                else
-                {
-                    Debug.LogError($"[Deck] CardSlot içinde Card bileşeni bulunamadı! Index: {i}");
-                }
-            }
+            GenerateDeck(ownerPlayerId);
         }
         else
         {
             StartCoroutine(WaitForCards());
         }
 
-        StartCoroutine(Frame());
+        SetDeckVisibility(); // Oyuncunun sadece kendi destesini görmesini sağla
+
+        // GameObject aktifse Coroutine'i başlat
+        if (gameObject.activeInHierarchy)
+        {
+            StartCoroutine(Frame());
+        }
+    }
+
+    void SetDeckVisibility()
+    {
+        int localPlayerId = PhotonNetwork.LocalPlayer.ActorNumber - 1;
+
+        if (ownerPlayerId != localPlayerId)
+        {
+            GameObject enemyDeck = GameObject.Find($"Deck_Player{ownerPlayerId}");
+            if (enemyDeck != null)
+            {
+                enemyDeck.SetActive(false);
+            }
+        }
+    }
+
+
+    public void GenerateDeck(int playerId)
+    {
+        cards = new List<Card>();
+
+        for (int i = 0; i < cardsToSpawn; i++)
+        {
+            GameObject newCardSlot = PhotonNetwork.Instantiate("CardSlot", transform.position, Quaternion.identity);
+            RectTransform slotRect = newCardSlot.GetComponent<RectTransform>();
+            slotRect.anchorMin = new Vector2(0, 0.5f);
+            slotRect.anchorMax = new Vector2(0, 0.5f);
+            slotRect.pivot = new Vector2(0.5f, 0.5f);
+
+            PhotonView slotPhotonView = newCardSlot.GetComponent<PhotonView>();
+            if (slotPhotonView != null)
+            {
+                photonView.RPC("SetCardSlotParent", RpcTarget.AllBuffered, slotPhotonView.ViewID);
+            }
+            else
+            {
+                Debug.LogError("[Deck] CardSlot için PhotonView bulunamadı! Index: " + i);
+            }
+
+            Card cardComponent = newCardSlot.GetComponentInChildren<Card>();
+            if (cardComponent != null)
+            {
+                cards.Add(cardComponent);
+                cardComponent.BeginDragEvent.AddListener(BeginDrag);
+                cardComponent.EndDragEvent.AddListener(EndDrag);
+                cardComponent.name = $"Player{playerId}_Card{i}";
+            }
+            else
+            {
+                Debug.LogError("[Deck] CardSlot içinde Card bileşeni bulunamadı! Index: " + i);
+            }
+        }
     }
 
     [PunRPC]
@@ -73,25 +96,24 @@ public class Deck : MonoBehaviour
         if (slotPhotonView != null)
         {
             slotPhotonView.transform.SetParent(transform, false);
-            Debug.Log($"[Deck] CardSlot parent olarak ayarlandı: {slotPhotonView.gameObject.name}");
         }
         else
         {
-            Debug.LogError($"[Deck] SetCardSlotParent başarısız! ViewID: {slotViewID}");
+            Debug.LogError("[Deck] SetCardSlotParent başarısız! ViewID: " + slotViewID);
         }
     }
 
     IEnumerator WaitForCards()
     {
-        yield return new WaitForSeconds(1f); // Kartların oluşturulmasını bekle
-
-        cards = FindObjectsOfType<Card>().ToList(); // Tüm sahnedeki kartları al
+        yield return new WaitForSeconds(1f);
+        cards = FindObjectsOfType<Card>().ToList();
         foreach (Card card in cards)
         {
             card.BeginDragEvent.AddListener(BeginDrag);
             card.EndDragEvent.AddListener(EndDrag);
         }
     }
+
 
     private void BeginDrag(Card card)
     {
@@ -177,6 +199,7 @@ public class Deck : MonoBehaviour
             card.cardVisual?.UpdateIndex(cards.Count);
         }
     }
+
     public void RemoveCard(Card card)
     {
         if (cards.Contains(card))
