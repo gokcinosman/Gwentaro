@@ -11,24 +11,42 @@ public class BoardRow : MonoBehaviour
     public List<Card> cards = new List<Card>();
     public int RowIndex;
 
-    public void AddCard(Card card, int playerId)
+    public bool AddCard(Card card, int playerId)
     {
-        Debug.Log($"[AddCard] Oyuncu {playerId}, ownerPlayerId {ownerPlayerId} olan row'a kart eklemeye çalışıyor.");
+        if (GameManager.Instance.CurrentTurnPlayer != playerId)
+        {
+            Debug.LogWarning($"[AddCard] Oyuncu {playerId} sırası değilken kart oynayamaz!");
+            return false;
+        }
 
         if (playerId != ownerPlayerId)
         {
-            Debug.LogError($"[AddCard] HATA! Oyuncu {playerId}, kendisine ait olmayan ({ownerPlayerId}) bir satıra kart koyamaz.");
-            return;
+            Debug.LogError($"[AddCard] HATA: Oyuncu {playerId}, kendisine ait olmayan bir satıra kart eklemeye çalıştı!");
+            return false;
         }
 
-        // Kartı ekleme işlemi
-        cards.Add(card);
-        card.transform.SetParent(transform);
-        card.transform.localPosition = Vector3.zero;
-        card.isPlaced = true;
-        Debug.Log("[AddCard] Kart başarıyla eklendi.");
-    }
+        if (cards.Contains(card))
+        {
+            Debug.LogError("[AddCard] HATA: Kart zaten bu satırda mevcut!");
+            return false;
+        }
 
+        if (rowType != card.cardStats.cardType)
+        {
+            Debug.LogError("[AddCard] HATA: Yanlış türde bir kart eklenmeye çalışılıyor!");
+            return false;
+        }
+
+        // Kartı ekle
+        cards.Add(card);
+        card.GetComponent<Selectable>().enabled = false;
+        card.RemoveFromDeck();
+        card.transform.SetParent(transform);
+
+        RearrangeCards();
+        Debug.Log($"[AddCard] Oyuncu {playerId} kartı başarıyla ekledi.");
+        return true;
+    }
 
 
     private void RearrangeCards()
@@ -50,5 +68,9 @@ public class BoardRow : MonoBehaviour
                 .SetEase(Ease.OutBack)
                 .OnStart(() => card.transform.SetAsLastSibling());
         }
+    }
+    public int GetTotalPower()
+    {
+        return 0;
     }
 }

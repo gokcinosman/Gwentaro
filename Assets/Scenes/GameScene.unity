@@ -2030,11 +2030,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf2c173da28486e43929ecdc8bbbe9b0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  player1Deck: {fileID: 0}
+  player2Deck: {fileID: 0}
   uiObject: {fileID: 278421981}
   player1: {fileID: 0}
   player2: {fileID: 0}
   player1Rows: []
   player2Rows: []
+  boardRows: []
 --- !u!114 &1417279579
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -2,116 +2,56 @@ using System.Collections.Generic;
 using Photon.Pun;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UIElements;
 
 public class GameManager : MonoBehaviourPun
 {
     public static GameManager Instance;
-    public Deck player1Deck;
-    public Deck player2Deck;
-
+    public Deck player1Deck, player2Deck;
     public GameObject uiObject;
+    public PlayerManager player1, player2;
+    public List<BoardRow> player1Rows = new List<BoardRow>(), player2Rows = new List<BoardRow>();
+    public BoardRow[] boardRows;
+
     private int currentTurnPlayer;
+    private int player1Score = 0, player2Score = 0, currentRound = 1;
+    private bool gameOver = false, player1Passed = false, player2Passed = false;
+
     public int CurrentTurnPlayer => currentTurnPlayer;
-    private int[] currentRowPowers = new int[3];
-    private int player1Score = 0;
-    private int player2Score = 0;
-    private int currentRound = 1;
-    private bool gameOver = false;
-    private bool player1Passed = false;
-    private bool player2Passed = false;
-    public PlayerManager player1;
-    public PlayerManager player2;
-    public List<BoardRow> player1Rows = new List<BoardRow>(); // Oyuncu 1'in satırları
-    public List<BoardRow> player2Rows = new List<BoardRow>();
-    public BoardRow[] boardRows; // Eğer eksikse ekle
-
-
-    void AssignDecks()
-    {
-        Deck[] allDecks = FindObjectsOfType<Deck>(); // Tüm deckleri bul
-        foreach (var deck in allDecks)
-        {
-            if (deck.ownerPlayerId == 0)
-            {
-                player1Deck = deck;
-                Debug.Log("[AssignDecks] Player 1 için deck atandı.");
-            }
-            else if (deck.ownerPlayerId == 1)
-            {
-                player2Deck = deck;
-                Debug.Log("[AssignDecks] Player 2 için deck atandı.");
-            }
-        }
-    }
-    void AssignRows()
-    {
-        foreach (var row in player1Rows)
-        {
-            row.ownerPlayerId = 0;
-            Debug.Log($"[AssignRows] Oyuncu 1 için row atandı: {row.name}");
-        }
-        foreach (var row in player2Rows)
-        {
-            row.ownerPlayerId = 1;
-            Debug.Log($"[AssignRows] Oyuncu 2 için row atandı: {row.name}");
-        }
-    }
-    void PositionBoardRows()
-    {
-        int localPlayerId = PhotonNetwork.LocalPlayer.ActorNumber == 1 ? 0 : 1;
-
-        if (localPlayerId == 1) // Player 2 ise board'u çevir
-        {
-            foreach (var row in player1Rows)
-            {
-                row.transform.Rotate(0, 0, 180); // 180 derece döndür
-            }
-            foreach (var row in player2Rows)
-            {
-                row.transform.Rotate(0, 0, 180); // 180 derece döndür
-            }
-        }
-    }
-    [PunRPC]
-    public void CloseUI()
-    {
-
-        uiObject.SetActive(false);
-
-
-    }
 
     void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // Sahne değiştiğinde yok olmasın
+            DontDestroyOnLoad(gameObject);
         }
         else
         {
             Destroy(gameObject);
             return;
         }
-
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
-    void OnDestroy()
-    {
-        SceneManager.sceneLoaded -= OnSceneLoaded;
-    }
+    void OnDestroy() => SceneManager.sceneLoaded -= OnSceneLoaded;
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         if (scene.name == "CardScene")
         {
             AssignBoardRows();
-            AssignDecks(); // Deckleri atıyoruz
+            AssignDecks();
         }
     }
 
+    void AssignDecks()
+    {
+        foreach (var deck in FindObjectsOfType<Deck>())
+        {
+            if (deck.ownerPlayerId == 0) player1Deck = deck;
+            else if (deck.ownerPlayerId == 1) player2Deck = deck;
+        }
+    }
 
     void AssignBoardRows()
     {
@@ -121,143 +61,193 @@ public class GameManager : MonoBehaviourPun
 
         foreach (var row in boardRows)
         {
-            Debug.Log($"[AssignBoardRows] Row: {row.name}, Owner: {row.ownerPlayerId}");
-
-            if (row.ownerPlayerId == 0)
-            {
-                player1Rows.Add(row);
-                Debug.Log($"[AssignBoardRows] Player 1 için row eklendi: {row.name}");
-            }
-            else if (row.ownerPlayerId == 1)
-            {
-                player2Rows.Add(row);
-                Debug.Log($"[AssignBoardRows] Player 2 için row eklendi: {row.name}");
-            }
-            else
-            {
-                Debug.LogWarning($"[AssignBoardRows] Sahipsiz row bulundu: {row.name}");
-            }
+            if (row.ownerPlayerId == 0) player1Rows.Add(row);
+            else if (row.ownerPlayerId == 1) player2Rows.Add(row);
         }
+    }
 
-        Debug.Log($"[AssignBoardRows] Player 1 Rows: {player1Rows.Count}, Player 2 Rows: {player2Rows.Count}");
+    [PunRPC]
+    void CloseUI()
+    {
+        if (uiObject != null)
+        {
+            uiObject.SetActive(false);
+        }
+        else
+        {
+            Debug.LogWarning("[CloseUI] uiObject referansı bulunamadı!");
+        }
     }
 
     [PunRPC]
     public void PassTurn(int playerId)
     {
-        if (playerId == 0)
-        {
-            player1Passed = true;
-            Debug.Log("Oyuncu 1 pas geçti!");
-        }
-        else if (playerId == 1)
-        {
-            player2Passed = true;
-            Debug.Log("Oyuncu 2 pas geçti!");
-        }
+        Debug.Log($"[PassTurn] Oyuncu {playerId} pas geçti.");
 
-        // Eğer her iki oyuncu da pas geçtiyse raundu bitir
+        if (playerId == 0) player1Passed = true;
+        else if (playerId == 1) player2Passed = true;
+
         if (player1Passed && player2Passed)
         {
             EndRound();
         }
         else
         {
-            EndTurn(); // Sıradaki oyuncuya geç
+            // Diğer oyuncu zaten pas geçmemişse sırayı değiştir
+            int nextPlayer = (playerId + 1) % 2;
+            SetCurrentTurnPlayer(nextPlayer);
         }
     }
-
 
     [PunRPC]
     public void StartGame()
     {
         if (photonView.IsMine)
         {
-            SetPlayersID(); // Oyuncuların ID'sini belirle
-            AssignRows(); // Satır sahipliklerini belirle
-            Debug.Log("Oyun master client tarafından başlatılıyor");
-            DealInitialCards();
-            DetermineFirstPlayer(); // Kimin başlayacağını belirle
+            SetPlayersID();
+            AssignBoardRows();
+            DetermineFirstPlayer();
             LoadGameScene();
-            PositionBoardRows();
         }
         photonView.RPC("CloseUI", RpcTarget.All);
     }
 
-
     void LoadGameScene()
     {
         if (PhotonNetwork.IsMasterClient)
-        {
-            PhotonNetwork.LoadLevel("CardScene"); // Sadece master client çağırıyor
-        }
+            PhotonNetwork.LoadLevel("CardScene");
     }
 
-
-    public void SetPlayersID()
+    void SetPlayersID()
     {
-        Debug.Log("SetPlayersID() çağrıldı.");
-
-        GameObject player1Obj = new GameObject("Player1");
-        player1Obj.transform.SetParent(transform); // GameManager’ın altına ekle
-        player1 = player1Obj.AddComponent<PlayerManager>();
+        player1 = new GameObject("Player1").AddComponent<PlayerManager>();
+        player1.transform.SetParent(transform);
         player1.playerId = 0;
 
-        GameObject player2Obj = new GameObject("Player2");
-        player2Obj.transform.SetParent(transform); // GameManager’ın altına ekle
-        player2 = player2Obj.AddComponent<PlayerManager>();
+        player2 = new GameObject("Player2").AddComponent<PlayerManager>();
+        player2.transform.SetParent(transform);
         player2.playerId = 1;
-        player1 = player1Obj.GetComponent<PlayerManager>();
-        player2 = player2Obj.GetComponent<PlayerManager>();
-        Debug.Log($"[SetPlayersID] Player1: {player1}, Player2: {player2}");
-    }
-
-
-
-    void DealInitialCards()
-    {
-        if (PhotonNetwork.IsMasterClient)
-        {
-            // photonView.RPC("ReceiveCards", RpcTarget.All, 10);
-        }
     }
 
     void DetermineFirstPlayer()
     {
         if (PhotonNetwork.IsMasterClient)
         {
-            int firstPlayer = Random.Range(0, PhotonNetwork.PlayerList.Length); // Rastgele bir oyuncu seç
-            photonView.RPC("SetTurn", RpcTarget.All, firstPlayer); // Tüm oyunculara bildir
+            int firstPlayer = Random.Range(0, 2);
+            SetCurrentTurnPlayer(firstPlayer);
         }
     }
 
-    void StartNewRound()
+    // Yeni eklenen yardımcı metot - tek bir yerden sırayı ayarlar
+    void SetCurrentTurnPlayer(int playerId)
     {
-        currentRound++;
-        player1Passed = false;
-        player2Passed = false;
-
-        Debug.Log($"Yeni raunt başladı! Şu an {currentRound}. raunt");
-
-        for (int i = 0; i < currentRowPowers.Length; i++)
+        if (PhotonNetwork.IsMasterClient)
         {
-            currentRowPowers[i] = 0;
+            photonView.RPC("SetTurnRPC", RpcTarget.All, playerId);
         }
     }
 
     [PunRPC]
     public void SetTurnRPC(int playerId)
     {
-        currentTurnPlayer = playerId;
         Debug.Log($"[SetTurnRPC] Yeni sıra: Oyuncu {playerId}");
+        currentTurnPlayer = playerId;
+
+        // SyncTurn'ü kaldırdık, sadece UI bilgilendirmesi yapıyoruz
+        bool isMyTurn = (PhotonNetwork.LocalPlayer.ActorNumber - 1) == currentTurnPlayer;
+        Debug.Log(isMyTurn ? "Senin sıran" : "Rakibin sırası");
     }
 
+    [PunRPC]
+    public void EndTurnRPC()
+    {
+        int previousPlayer = currentTurnPlayer;
+        int nextPlayer = (currentTurnPlayer + 1) % 2;
+
+        Debug.Log($"[EndTurnRPC] Sıra değiştiriliyor: {previousPlayer} → {nextPlayer}");
+
+        // SetTurnRPC'yi direkt çağırmak yerine SetCurrentTurnPlayer kullanıyoruz
+        SetCurrentTurnPlayer(nextPlayer);
+    }
+
+    // Bu metot tüm client'ler için çalışmalı
     public void EndTurn()
     {
-        if (PhotonNetwork.IsMasterClient)
+        // Sadece şu anki sıradaki oyuncu EndTurn yapabilir
+        int localPlayerId = PhotonNetwork.LocalPlayer.ActorNumber - 1;
+        if (localPlayerId == currentTurnPlayer)
         {
-            int nextPlayer = (currentTurnPlayer + 1) % 2; // Oyuncular sırayla değişsin
-            photonView.RPC("SetTurnRPC", RpcTarget.All, nextPlayer);
+            photonView.RPC("EndTurnRPC", RpcTarget.All);
+        }
+        else
+        {
+            Debug.LogWarning($"[EndTurn] Sırası olmayan oyuncu ({localPlayerId}) sıra değiştirmeye çalıştı. Şu anki sıra: {currentTurnPlayer}");
+        }
+    }
+
+    public void PlayCard(int playerId, Card card, BoardRow row)
+    {
+        Debug.Log($"[PlayCard] Oyuncu {playerId} kart oynuyor. Şu anki sıra: {currentTurnPlayer}");
+
+        if (playerId != currentTurnPlayer)
+        {
+            Debug.LogError($"[PlayCard] HATA! Oyuncu {playerId} sırası değilken kart oynuyor!");
+            return;
+        }
+
+        int rowIndex = System.Array.IndexOf(boardRows, row);
+        PhotonView cardPhotonView = card.GetComponent<PhotonView>();
+        if (cardPhotonView == null) return;
+
+        photonView.RPC("PlayCardRPC", RpcTarget.All, playerId, cardPhotonView.ViewID, rowIndex);
+    }
+
+    [PunRPC]
+    void PlayCardRPC(int playerId, int cardViewID, int rowIndex)
+    {
+        Debug.Log($"[PlayCardRPC] Oyuncu {playerId} kartı oynadı. Şu an sıra: {currentTurnPlayer}");
+
+        BoardRow targetRow = boardRows[rowIndex];
+        Card card = PhotonView.Find(cardViewID)?.GetComponent<Card>();
+
+        if (card == null) return;
+
+        bool success = targetRow.AddCard(card, playerId);
+        if (success)
+        {
+            Debug.Log($"[PlayCardRPC] Oyuncu {playerId} kartı başarıyla oynadı. Sıra değiştiriliyor.");
+
+            // EndTurnRPC'yi hemen çağırmak yerine sıranın değişmesi için bir kare bekleyelim
+            if (PhotonNetwork.IsMasterClient)
+            {
+                StartCoroutine(DelayedEndTurn());
+            }
+        }
+        else
+        {
+            Debug.LogError("[PlayCardRPC] HATA! Kart oynanamadı.");
+        }
+    }
+
+    System.Collections.IEnumerator DelayedEndTurn()
+    {
+        yield return null; // Bir frame bekle
+        photonView.RPC("EndTurnRPC", RpcTarget.All);
+    }
+
+    public void OnPassButtonClicked()
+    {
+        // Oyuncunun kendi ID'sini alıyoruz
+        int localPlayerId = PhotonNetwork.LocalPlayer.ActorNumber - 1;
+
+        // Sadece sırası gelen oyuncu pas geçebilir
+        if (localPlayerId == currentTurnPlayer)
+        {
+            photonView.RPC("PassTurn", RpcTarget.All, localPlayerId);
+        }
+        else
+        {
+            Debug.LogWarning($"[OnPassButtonClicked] Sırası olmayan oyuncu ({localPlayerId}) pas geçmeye çalıştı.");
         }
     }
 
@@ -265,149 +255,32 @@ public class GameManager : MonoBehaviourPun
     {
         if (gameOver) return;
 
-        int player1Power = CalculateTotalPower(0); // Oyuncu 1’in toplam gücü
-        int player2Power = CalculateTotalPower(1); // Oyuncu 2’nin toplam gücü
+        int player1Power = CalculateTotalPower(player1Rows);
+        int player2Power = CalculateTotalPower(player2Rows);
 
-        if (player1Power > player2Power)
-        {
-            player1Score++;
-            Debug.Log("Oyuncu 1 bu raundu kazandı!");
-        }
-        else if (player2Power > player1Power)
-        {
-            player2Score++;
-            Debug.Log("Oyuncu 2 bu raundu kazandı!");
-        }
-        else
-        {
-            Debug.Log("Bu raund berabere!");
-        }
+        if (player1Power > player2Power) player1Score++;
+        else if (player2Power > player1Power) player2Score++;
 
-        // Oyunu kazanma kontrolü
-        if (player1Score == 2)
+        if (player1Score == 2 || player2Score == 2)
         {
             gameOver = true;
-            Debug.Log("Oyuncu 1 oyunu kazandı!");
-        }
-        else if (player2Score == 2)
-        {
-            gameOver = true;
-            Debug.Log("Oyuncu 2 oyunu kazandı!");
         }
         else
         {
             StartNewRound();
         }
     }
-    private int CalculateTotalPower(int playerIndex)
+
+    void StartNewRound()
+    {
+        currentRound++;
+        player1Passed = player2Passed = false;
+    }
+
+    int CalculateTotalPower(List<BoardRow> rows)
     {
         int totalPower = 0;
-
-        // Burada her oyuncunun oynadığı kartların toplam gücünü hesaplayacağız
-        // Örneğin her satırın gücünü topluyoruz:
-        foreach (int power in currentRowPowers)
-        {
-            totalPower += power;
-        }
-
+        foreach (var row in rows) totalPower += row.GetTotalPower();
         return totalPower;
     }
-
-
-    [PunRPC]
-    public void SetTurn(int playerId)
-    {
-        currentTurnPlayer = playerId;
-        Debug.Log($"Tur sırası: Oyuncu {playerId}");
-    }
-    public void CheckEndGameCondition()
-    {
-        bool bothPlayersPassed = player1Passed && player2Passed;
-        bool noCardsLeft = CheckIfPlayersHaveNoCards();
-
-        if (bothPlayersPassed || noCardsLeft)
-        {
-            EndRound();
-        }
-    }
-    private bool CheckIfPlayersHaveNoCards()
-    {
-        return player1.GetHandCount() == 0 && player2.GetHandCount() == 0;
-    }
-    [PunRPC]
-    void PlayCardRPC(int playerId, int cardViewID, int rowIndex)
-    {
-        GameManager gameManager = FindObjectOfType<GameManager>();
-
-        if (gameManager == null || gameManager.boardRows == null)
-        {
-            Debug.LogError("[PlayCardRPC] GameManager veya boardRows null!");
-            return;
-        }
-
-        if (rowIndex < 0 || rowIndex >= gameManager.boardRows.Length)
-        {
-            Debug.LogError($"[PlayCardRPC] Geçersiz rowIndex: {rowIndex}. BoardRow dizisinin sınırlarını aşmaya çalışıyor!");
-            return;
-        }
-
-        BoardRow targetRow = gameManager.boardRows[rowIndex];
-
-        Debug.Log($"[PlayCardRPC] Player {playerId}, Row Owner: {targetRow.ownerPlayerId}, RowIndex: {rowIndex}");
-
-        if (targetRow.ownerPlayerId != playerId)
-        {
-            Debug.LogError($"[PlayCardRPC] HATA! Player {playerId} yanlış row ({targetRow.ownerPlayerId}) seçti.");
-            return;
-        }
-
-        Card card = PhotonView.Find(cardViewID)?.GetComponent<Card>();
-        if (card == null)
-        {
-            Debug.LogError($"[PlayCardRPC] Geçersiz cardViewID: {cardViewID}. Kart bulunamadı!");
-            return;
-        }
-
-        targetRow.AddCard(card, playerId);
-    }
-
-
-
-
-    public void PlayCard(int playerId, Card card, BoardRow row)
-    {
-        if (playerId != currentTurnPlayer) // Eğer sırası değilse kart oynayamasın
-        {
-            Debug.Log($"[PlayCard] Oyuncu {playerId} sırası değil! Şu an {currentTurnPlayer}'ın sırası.");
-            return;
-        }
-
-        int rowIndex = (playerId == 0) ? player1Rows.IndexOf(row) : player2Rows.IndexOf(row);
-        PhotonView cardPhotonView = card.GetComponent<PhotonView>();
-
-        if (cardPhotonView == null)
-        {
-            Debug.LogError("[PlayCard] Kartın PhotonView bileşeni eksik!");
-            return;
-        }
-
-        int cardViewID = cardPhotonView.ViewID;
-        Debug.Log($"[PlayCard] Kart oynanıyor. PlayerID: {playerId}, CardViewID: {cardViewID}, RowIndex: {rowIndex}");
-
-        photonView.RPC("PlayCardRPC", RpcTarget.All, playerId, cardViewID, rowIndex);
-        EndTurn(); // Sıradaki oyuncuya geç
-    }
-
-
-
-    public void OnPassButtonClicked()
-    {
-        if (PhotonNetwork.IsMasterClient)
-        {
-            int playerId = PhotonNetwork.LocalPlayer.ActorNumber == 1 ? 0 : 1; // Oyuncu ID’sini al
-            photonView.RPC("PassTurn", RpcTarget.All, playerId);
-        }
-    }
-
-
 }

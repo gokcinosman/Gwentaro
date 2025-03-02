@@ -51,6 +51,8 @@ MonoBehaviour:
   - SetTurnRPC
   - SetCardParent
   - SetCardSlotParent
+  - EndTurnRPC
+  - SyncTurn
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

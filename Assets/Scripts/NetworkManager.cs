@@ -8,7 +8,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     [SerializeField] byte maxPlayersPerRoom = 2;
     bool isConnecting;
     void Awake()
-    {PhotonNetwork.AutomaticallySyncScene = true;
+    {
+        PhotonNetwork.AutomaticallySyncScene = true;
 
         if (Instance == null)
         {
@@ -69,11 +70,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
         PhotonNetwork.JoinRandomRoom();
     }
-    public override void OnJoinRandomFailed(short returnCode, string message)
-    {
-        Debug.Log("Rastgele oda bulunamadı, yeni oda oluşturuluyor...");
-        CreateRoom();
-    }
+
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
         if (GameManager.Instance == null)

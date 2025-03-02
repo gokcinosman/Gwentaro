@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 4396405918308546547}
   - component: {fileID: 7043603899835832321}
   m_Layer: 5
-  m_Name: CardPrefab
+  m_Name: CardSlot
   m_TagString: Slot
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

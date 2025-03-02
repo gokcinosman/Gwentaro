@@ -26,7 +26,7 @@ public class Deck : MonoBehaviour
             for (int i = 0; i < cardsToSpawn; i++)
             {
                 // Artık Card yerine CardSlot'un ID'sini alıyoruz
-                GameObject newCardSlot = PhotonNetwork.Instantiate("CardPrefab", transform.position, Quaternion.identity);
+                GameObject newCardSlot = PhotonNetwork.Instantiate("CardSlot", transform.position, Quaternion.identity);
                 RectTransform slotRect = newCardSlot.GetComponent<RectTransform>();
                 slotRect.anchorMin = new Vector2(0, 0.5f);
                 slotRect.anchorMax = new Vector2(0, 0.5f);
