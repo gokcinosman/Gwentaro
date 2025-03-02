@@ -138,11 +138,18 @@ public class GameManager : MonoBehaviourPun
         }
         else
         {
-            // Diğer oyuncu zaten pas geçmemişse sırayı değiştir
+            // Sıradaki oyuncunun pas geçmediğinden emin ol
             int nextPlayer = (playerId + 1) % 2;
+            if ((nextPlayer == 0 && player1Passed) || (nextPlayer == 1 && player2Passed))
+            {
+                Debug.Log("[PassTurn] Sıradaki oyuncu da pas geçmiş, bu yüzden sırayı değiştirmiyoruz.");
+                return;
+            }
+
             SetCurrentTurnPlayer(nextPlayer);
         }
     }
+
 
     [PunRPC]
     public void StartGame()
@@ -234,6 +241,13 @@ public class GameManager : MonoBehaviourPun
     {
         Debug.Log($"[PlayCard] Oyuncu {playerId} kart oynuyor. Şu anki sıra: {currentTurnPlayer}");
 
+        // Eğer oyuncu pas geçtiyse kart oynayamasın
+        if ((playerId == 0 && player1Passed) || (playerId == 1 && player2Passed))
+        {
+            Debug.LogError($"[PlayCard] HATA! Oyuncu {playerId} pas geçtiği halde kart oynayamaz!");
+            return;
+        }
+
         if (playerId != currentTurnPlayer)
         {
             Debug.LogError($"[PlayCard] HATA! Oyuncu {playerId} sırası değilken kart oynuyor!");
@@ -280,21 +294,23 @@ public class GameManager : MonoBehaviourPun
         photonView.RPC("EndTurnRPC", RpcTarget.All);
     }
 
-    public void OnPassButtonClicked()
+    // Space tuşu ile pas geçme için Update metodu
+    void Update()
     {
-        // Oyuncunun kendi ID'sini alıyoruz
-        int localPlayerId = PhotonNetwork.LocalPlayer.ActorNumber - 1;
+        // Space tuşuna basıldığında ve oyun devam ediyorsa
+        if (Input.GetKeyDown(KeyCode.Space) && !gameOver)
+        {
+            int localPlayerId = PhotonNetwork.LocalPlayer.ActorNumber - 1;
 
-        // Sadece sırası gelen oyuncu pas geçebilir
-        if (localPlayerId == currentTurnPlayer)
-        {
-            photonView.RPC("PassTurn", RpcTarget.All, localPlayerId);
-        }
-        else
-        {
-            Debug.LogWarning($"[OnPassButtonClicked] Sırası olmayan oyuncu ({localPlayerId}) pas geçmeye çalıştı.");
+            // Sadece sırası gelen oyuncu pas geçebilir
+            if (localPlayerId == currentTurnPlayer)
+            {
+                Debug.Log($"[Update] Oyuncu {localPlayerId} space tuşuyla pas geçti.");
+                photonView.RPC("PassTurn", RpcTarget.All, localPlayerId);
+            }
         }
     }
+
 
     public void EndRound()
     {
