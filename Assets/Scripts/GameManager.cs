@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviourPun
 {
     public static GameManager Instance;
+    public GameObject boardObject;
     public Deck player1Deck, player2Deck;
     public GameObject uiObject;
     public PlayerManager player1, player2;
@@ -56,15 +57,30 @@ public class GameManager : MonoBehaviourPun
     void AssignBoardRows()
     {
         boardRows = FindObjectsOfType<BoardRow>();
+        boardObject = GameObject.Find("GameBoard");
         player1Rows.Clear();
         player2Rows.Clear();
 
         foreach (var row in boardRows)
         {
-            if (row.ownerPlayerId == 0) player1Rows.Add(row);
-            else if (row.ownerPlayerId == 1) player2Rows.Add(row);
+            if (row.ownerPlayerId == 0)
+            {
+                player1Rows.Add(row);
+            }
+            else if (row.ownerPlayerId == 1)
+            {
+                player2Rows.Add(row);
+            }
+        }
+
+        int localPlayerId = PhotonNetwork.LocalPlayer.ActorNumber - 1;
+        if (localPlayerId == 1) // Player 2 ise board'u döndür
+        {
+            boardObject.transform.Rotate(0, 0, 180);
+
         }
     }
+
 
     [PunRPC]
     void CloseUI()

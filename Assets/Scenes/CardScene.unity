@@ -469,6 +469,7 @@ MonoBehaviour:
   tweenCardReturn: 1
   photonView: {fileID: 462293214}
   cardsToSpawn: 7
+  ownerPlayerId: 0
 --- !u!114 &462293214
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1360,9 +1361,9 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1724972233}
-  - {fileID: 837741923}
   - {fileID: 2062747014}
+  - {fileID: 837741923}
+  - {fileID: 1724972233}
   m_Father: {fileID: 1502761776}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
