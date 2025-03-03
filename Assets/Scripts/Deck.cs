@@ -7,7 +7,7 @@ using System;
 using Photon.Pun;
 public class Deck : MonoBehaviour
 {
-    [NonSerialized] private List<Card> cards;
+    [SerializeField] private List<Card> cards;
     [SerializeField] private Card selectedCard;
     [SerializeField] private GameObject slotPrefab;
     [SerializeField] private bool tweenCardReturn = true;
@@ -28,14 +28,17 @@ public class Deck : MonoBehaviour
             StartCoroutine(WaitForCards());
         }
 
-        SetDeckVisibility(); // Oyuncunun sadece kendi destesini görmesini sağla
+        SetDeckVisibility();
 
-        // GameObject aktifse Coroutine'i başlat
-        if (gameObject.activeInHierarchy)
+        int localPlayerId = PhotonNetwork.LocalPlayer.ActorNumber - 1;
+
+        // Sadece kendi destesi için Frame() çalıştır
+        if (ownerPlayerId == localPlayerId)
         {
             StartCoroutine(Frame());
         }
     }
+
 
     void SetDeckVisibility()
     {

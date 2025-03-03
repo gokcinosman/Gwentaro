@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Photon.Pun;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -6,7 +7,7 @@ using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviourPun
 {
     public static GameManager Instance;
-    public GameObject boardObject;
+    public GameObject enemyBoardObject;
     public Deck player1Deck, player2Deck;
     public GameObject uiObject;
     public PlayerManager player1, player2;
@@ -82,15 +83,54 @@ public class GameManager : MonoBehaviourPun
         return newDeck;
     }
 
+    void SwapMeleeAndSiegeParents()
+    {
+        Transform player1MeleeParent = null, player1SiegeParent = null;
+        Transform player2MeleeParent = null, player2SiegeParent = null;
+
+        // BoardRow'ları tarayarak Melee ve Siege olanları bul
+        foreach (var row in boardRows)
+        {
+            if (row.ownerPlayerId == 0) // Player 1 için
+            {
+                if (row.rowType == CardType.Melee) player1MeleeParent = row.transform.parent;
+                if (row.rowType == CardType.Siege) player1SiegeParent = row.transform.parent;
+            }
+            else if (row.ownerPlayerId == 1) // Player 2 için
+            {
+                if (row.rowType == CardType.Melee) player2MeleeParent = row.transform.parent;
+                if (row.rowType == CardType.Siege) player2SiegeParent = row.transform.parent;
+            }
+        }
+
+        // Eğer parent'lar bulunduysa sıralarını değiştir
+        if (player1MeleeParent != null && player1SiegeParent != null)
+        {
+            int player1MeleeIndex = player1MeleeParent.GetSiblingIndex();
+            int player1SiegeIndex = player1SiegeParent.GetSiblingIndex();
+
+            player1MeleeParent.SetSiblingIndex(player1SiegeIndex);
+            player1SiegeParent.SetSiblingIndex(player1MeleeIndex);
+        }
+
+        if (player2MeleeParent != null && player2SiegeParent != null)
+        {
+            int player2MeleeIndex = player2MeleeParent.GetSiblingIndex();
+            int player2SiegeIndex = player2SiegeParent.GetSiblingIndex();
+
+            player2MeleeParent.SetSiblingIndex(player2SiegeIndex);
+            player2SiegeParent.SetSiblingIndex(player2MeleeIndex);
+        }
+    }
 
     void AssignBoardRows()
     {
         boardRows = FindObjectsOfType<BoardRow>();
-        boardObject = GameObject.Find("GameBoard");
+        enemyBoardObject = GameObject.Find("Board_Player1");
         player1Rows.Clear();
         player2Rows.Clear();
 
-        foreach (var row in boardRows)
+        foreach (var row in boardRows.OrderByDescending(r => r.transform.position.y))
         {
             if (row.ownerPlayerId == 0)
             {
@@ -101,14 +141,17 @@ public class GameManager : MonoBehaviourPun
                 player2Rows.Add(row);
             }
         }
-
         int localPlayerId = PhotonNetwork.LocalPlayer.ActorNumber - 1;
         if (localPlayerId == 1) // Player 2 ise board'u döndür
         {
-            boardObject.transform.Rotate(0, 0, 180);
+            enemyBoardObject.transform.SetSiblingIndex(0);
 
+            // Melee ve Siege parent'larını değiştir
+            SwapMeleeAndSiegeParents();
         }
+
     }
+
 
 
     [PunRPC]
