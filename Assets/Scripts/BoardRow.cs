@@ -34,7 +34,6 @@ public class BoardRow : MonoBehaviour
 
         if (rowType != card.cardStats.cardType)
         {
-            Debug.LogError("[AddCard] HATA: Yanlış türde bir kart eklenmeye çalışılıyor!");
             return false;
         }
 
@@ -45,7 +44,6 @@ public class BoardRow : MonoBehaviour
         card.transform.SetParent(transform);
 
         RearrangeCards();
-        Debug.Log($"[AddCard] Oyuncu {playerId} kartı başarıyla ekledi.");
         UpdateRowValue(GetTotalPower());
         return true;
     }
@@ -83,33 +81,44 @@ public class BoardRow : MonoBehaviour
 
     #region Observer Pattern
     private List<IObserver> observers = new List<IObserver>();
-    private int rowValue;
 
     public void AddObserver(IObserver observer)
     {
         if (!observers.Contains(observer))
+        {
             observers.Add(observer);
+            // Yeni observer'a mevcut değeri hemen bildir
+            observer.OnNotify(rowScore.ToString(), this);
+        }
     }
 
     public void RemoveObserver(IObserver observer)
     {
         if (observers.Contains(observer))
+        {
             observers.Remove(observer);
+        }
     }
 
     public void NotifyObservers(string message)
     {
         foreach (var observer in observers)
         {
-            observer.OnNotify(message, this);
+            if (observer != null)
+            {
+                observer.OnNotify(message, this);
+            }
+
         }
     }
 
     public void UpdateRowValue(int newValue)
     {
-        rowScore = newValue;
-        scoreManager.UpdateTotalScore(rowScore);
-        NotifyObservers($"Row {RowIndex} updated to {rowScore}");
+        if (rowScore != newValue)
+        {
+            rowScore = newValue;
+            NotifyObservers(rowScore.ToString());
+        }
     }
     #endregion
 }
