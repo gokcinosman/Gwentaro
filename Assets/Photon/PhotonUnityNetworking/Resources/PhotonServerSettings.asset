@@ -54,6 +54,7 @@ MonoBehaviour:
   - EndTurnRPC
   - SyncTurn
   - EndRound
+  - SwapCardsRPC
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

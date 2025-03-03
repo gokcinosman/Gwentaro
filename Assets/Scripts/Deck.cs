@@ -7,7 +7,7 @@ using System;
 using Photon.Pun;
 public class Deck : MonoBehaviour
 {
-    [SerializeField] private List<Card> cards;
+    [NonSerialized] private List<Card> cards;
     [SerializeField] private Card selectedCard;
     [SerializeField] private GameObject slotPrefab;
     [SerializeField] private bool tweenCardReturn = true;
