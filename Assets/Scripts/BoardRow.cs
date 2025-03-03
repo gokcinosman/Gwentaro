@@ -6,7 +6,8 @@ using UnityEngine.UI;
 public class BoardRow : MonoBehaviour
 {
     public int ownerPlayerId; // Bu satırın hangi oyuncuya ait olduğunu belirler
-
+    [SerializeField] private ScoreManager scoreManager;
+    [SerializeField] private int rowScore;
     public CardType rowType;
     public List<Card> cards = new List<Card>();
     public int RowIndex;
@@ -45,6 +46,7 @@ public class BoardRow : MonoBehaviour
 
         RearrangeCards();
         Debug.Log($"[AddCard] Oyuncu {playerId} kartı başarıyla ekledi.");
+        UpdateRowValue(GetTotalPower());
         return true;
     }
 
@@ -71,6 +73,43 @@ public class BoardRow : MonoBehaviour
     }
     public int GetTotalPower()
     {
-        return 0;
+        int totalPower = 0;
+        foreach (var card in cards)
+        {
+            totalPower += card.cardStats.cardValue;
+        }
+        return totalPower;
     }
+
+    #region Observer Pattern
+    private List<IObserver> observers = new List<IObserver>();
+    private int rowValue;
+
+    public void AddObserver(IObserver observer)
+    {
+        if (!observers.Contains(observer))
+            observers.Add(observer);
+    }
+
+    public void RemoveObserver(IObserver observer)
+    {
+        if (observers.Contains(observer))
+            observers.Remove(observer);
+    }
+
+    public void NotifyObservers(string message)
+    {
+        foreach (var observer in observers)
+        {
+            observer.OnNotify(message, this);
+        }
+    }
+
+    public void UpdateRowValue(int newValue)
+    {
+        rowScore = newValue;
+        scoreManager.UpdateTotalScore(rowScore);
+        NotifyObservers($"Row {RowIndex} updated to {rowScore}");
+    }
+    #endregion
 }

@@ -7,7 +7,6 @@ using Photon.Pun;
 public class Card : MonoBehaviourPun, IPointerDownHandler, IDragHandler, IEndDragHandler, IBeginDragHandler
 {
     private RectTransform rectTransform;
-    private PhotonView photonView;
     public CardVisual cardVisual;
     private Canvas canvas;
     private bool isDragging = false;
@@ -24,7 +23,6 @@ public class Card : MonoBehaviourPun, IPointerDownHandler, IDragHandler, IEndDra
 
     private void Awake()
     {
-        photonView = GetComponent<PhotonView>();
         rectTransform = GetComponent<RectTransform>();
         deck = FindObjectOfType<Deck>();
 
@@ -153,8 +151,6 @@ public class Card : MonoBehaviourPun, IPointerDownHandler, IDragHandler, IEndDra
                 ResetPosition(); // Kartı geri eski yerine götür
                 return;
             }
-
-            Debug.Log($"[OnEndDrag] Oyuncu {currentPlayerId} kart oynuyor. RowIndex: {rowIndex}");
 
             GameManager.Instance.PlayCard(currentPlayerId, this, currentHoveredRow);
             currentHoveredRow = null;

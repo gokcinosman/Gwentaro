@@ -161,16 +161,12 @@ public class GameManager : MonoBehaviourPun
         {
             uiObject.SetActive(false);
         }
-        else
-        {
-            Debug.LogWarning("[CloseUI] uiObject referansı bulunamadı!");
-        }
+
     }
 
     [PunRPC]
     public void PassTurn(int playerId)
     {
-        Debug.Log($"[PassTurn] Oyuncu {playerId} pas geçti.");
 
         if (playerId == 0) player1Passed = true;
         else if (playerId == 1) player2Passed = true;
@@ -181,11 +177,9 @@ public class GameManager : MonoBehaviourPun
         }
         else
         {
-            // Sıradaki oyuncunun pas geçmediğinden emin ol
             int nextPlayer = (playerId + 1) % 2;
             if ((nextPlayer == 0 && player1Passed) || (nextPlayer == 1 && player2Passed))
             {
-                Debug.Log("[PassTurn] Sıradaki oyuncu da pas geçmiş, bu yüzden sırayı değiştirmiyoruz.");
                 return;
             }
 
@@ -233,7 +227,6 @@ public class GameManager : MonoBehaviourPun
         }
     }
 
-    // Yeni eklenen yardımcı metot - tek bir yerden sırayı ayarlar
     void SetCurrentTurnPlayer(int playerId)
     {
         if (PhotonNetwork.IsMasterClient)
@@ -245,7 +238,6 @@ public class GameManager : MonoBehaviourPun
     [PunRPC]
     public void SetTurnRPC(int playerId)
     {
-        Debug.Log($"[SetTurnRPC] Yeni sıra: Oyuncu {playerId}");
         currentTurnPlayer = playerId;
 
         // SyncTurn'ü kaldırdık, sadece UI bilgilendirmesi yapıyoruz
@@ -258,26 +250,17 @@ public class GameManager : MonoBehaviourPun
     {
         int previousPlayer = currentTurnPlayer;
         int nextPlayer = (currentTurnPlayer + 1) % 2;
-
-        Debug.Log($"[EndTurnRPC] Sıra değiştiriliyor: {previousPlayer} → {nextPlayer}");
-
-        // SetTurnRPC'yi direkt çağırmak yerine SetCurrentTurnPlayer kullanıyoruz
         SetCurrentTurnPlayer(nextPlayer);
     }
 
-    // Bu metot tüm client'ler için çalışmalı
     public void EndTurn()
     {
-        // Sadece şu anki sıradaki oyuncu EndTurn yapabilir
         int localPlayerId = PhotonNetwork.LocalPlayer.ActorNumber - 1;
         if (localPlayerId == currentTurnPlayer)
         {
             photonView.RPC("EndTurnRPC", RpcTarget.All);
         }
-        else
-        {
-            Debug.LogWarning($"[EndTurn] Sırası olmayan oyuncu ({localPlayerId}) sıra değiştirmeye çalıştı. Şu anki sıra: {currentTurnPlayer}");
-        }
+
     }
 
     public void PlayCard(int playerId, Card card, BoardRow row)
@@ -307,7 +290,6 @@ public class GameManager : MonoBehaviourPun
     [PunRPC]
     void PlayCardRPC(int playerId, int cardViewID, int rowIndex)
     {
-        Debug.Log($"[PlayCardRPC] Oyuncu {playerId} kartı oynadı. Şu an sıra: {currentTurnPlayer}");
 
         BoardRow targetRow = boardRows[rowIndex];
         Card card = PhotonView.Find(cardViewID)?.GetComponent<Card>();
@@ -317,18 +299,13 @@ public class GameManager : MonoBehaviourPun
         bool success = targetRow.AddCard(card, playerId);
         if (success)
         {
-            Debug.Log($"[PlayCardRPC] Oyuncu {playerId} kartı başarıyla oynadı. Sıra değiştiriliyor.");
-
             // EndTurnRPC'yi hemen çağırmak yerine sıranın değişmesi için bir kare bekleyelim
             if (PhotonNetwork.IsMasterClient)
             {
                 StartCoroutine(DelayedEndTurn());
             }
         }
-        else
-        {
-            Debug.LogError("[PlayCardRPC] HATA! Kart oynanamadı.");
-        }
+
     }
 
     System.Collections.IEnumerator DelayedEndTurn()
@@ -337,15 +314,12 @@ public class GameManager : MonoBehaviourPun
         photonView.RPC("EndTurnRPC", RpcTarget.All);
     }
 
-    // Space tuşu ile pas geçme için Update metodu
     void Update()
     {
-        // Space tuşuna basıldığında ve oyun devam ediyorsa
         if (Input.GetKeyDown(KeyCode.Space) && !gameOver)
         {
             int localPlayerId = PhotonNetwork.LocalPlayer.ActorNumber - 1;
 
-            // Sadece sırası gelen oyuncu pas geçebilir
             if (localPlayerId == currentTurnPlayer)
             {
                 Debug.Log($"[Update] Oyuncu {localPlayerId} space tuşuyla pas geçti.");

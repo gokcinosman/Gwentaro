@@ -14,3 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardType: 1
   cardClass: 1
+  cardValue: 5
+  cardName: melee_card
+  cardDesc: close combat
+  cardSprite: {fileID: 0}
+  meleeSpriteIcon: {fileID: 0}
+  rangedSpriteIcon: {fileID: 0}
+  siegeSpriteIcon: {fileID: 0}
+  agileSpriteIcon: {fileID: 0}
+  heroSpriteIcon: {fileID: 0}
+  medicSpriteIcon: {fileID: 0}
+  moraleBoosterSpriteIcon: {fileID: 0}
+  musterSpriteIcon: {fileID: 0}
+  spySpriteIcon: {fileID: 0}
+  tightBondSpriteIcon: {fileID: 0}
