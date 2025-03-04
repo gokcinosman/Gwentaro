@@ -7,33 +7,25 @@ public class CardStats : ScriptableObject
 {
     public CardType cardType;
     public CardClass cardClass;
+    public CardStatus cardStatue = CardStatus.Unit;
     public int cardValue;
     public string cardName;
     public string cardDesc;
-    public SpriteRenderer cardSprite;
-    public SpriteRenderer meleeSpriteIcon;
-    public SpriteRenderer rangedSpriteIcon;
-    public SpriteRenderer siegeSpriteIcon;
-    public SpriteRenderer agileSpriteIcon;
-    public SpriteRenderer heroSpriteIcon;
-    public SpriteRenderer medicSpriteIcon;
-    public SpriteRenderer moraleBoosterSpriteIcon;
-    public SpriteRenderer musterSpriteIcon;
-    public SpriteRenderer spySpriteIcon;
-    public SpriteRenderer tightBondSpriteIcon;
+    public Sprite cardSprite;
+    public Sprite meleeSpriteIcon;
+    public Sprite rangedSpriteIcon;
+    public Sprite siegeSpriteIcon;
+    public Sprite agileSpriteIcon;
+    public Sprite heroSpriteIcon;
+    public Sprite medicSpriteIcon;
+    public Sprite moraleBoosterSpriteIcon;
+    public Sprite musterSpriteIcon;
+    public Sprite spySpriteIcon;
+    public Sprite tightBondSpriteIcon;
+    public Sprite specialSpriteIcon;
 
 
-    public enum CardClass
-    {
-        None,
-        Agile,
-        Hero,
-        Medic,
-        MoraleBooster,
-        Muster,
-        Spy,
-        TightBond
-    }
+
 }
 public enum CardType
 {
@@ -41,4 +33,21 @@ public enum CardType
     Melee,
     Ranged,
     Siege
+}
+public enum CardClass
+{
+    None,
+    Agile,
+    Medic,
+    MoraleBooster,
+    Muster,
+    Spy,
+    TightBond
+}
+public enum CardStatus
+{
+    Unit,
+    Hero,
+    Leader,
+    Special
 }

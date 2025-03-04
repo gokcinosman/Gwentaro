@@ -3,7 +3,18 @@ guid: 8e3022e77ddf2ed4ab51d764416c7bb4
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - cardSprite: {instanceID: 0}
+  - meleeSpriteIcon: {fileID: 21300000, guid: e6d5f07cc68d3bff9b38378a5f0da6aa, type: 3}
+  - rangedSpriteIcon: {fileID: 21300000, guid: 0c82e250a31fbdbbebe2276701c6a824, type: 3}
+  - siegeSpriteIcon: {fileID: 21300000, guid: 97c7410b04ac3cf959b43509254d05cd, type: 3}
+  - agileSpriteIcon: {fileID: 21300000, guid: 9e2f501b2b33e34f58cecaa9d3d81e2e, type: 3}
+  - heroSpriteIcon: {fileID: 21300000, guid: db11efac3acd25c5298abd96f02273cf, type: 3}
+  - medicSpriteIcon: {fileID: 21300000, guid: 239bdec7eb6bb497691ba74818c4c1a6, type: 3}
+  - moraleBoosterSpriteIcon: {fileID: 21300000, guid: 9dc492b744bf3ff5da1025e02ec32a68, type: 3}
+  - musterSpriteIcon: {fileID: 21300000, guid: b67ecd7bf0305377da936f9ed9d442e7, type: 3}
+  - spySpriteIcon: {fileID: 21300000, guid: d8a139e2b294161fbbb3409a323c015f, type: 3}
+  - tightBondSpriteIcon: {fileID: 21300000, guid: e78e1e34839d238b6a0f76032142d134, type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
