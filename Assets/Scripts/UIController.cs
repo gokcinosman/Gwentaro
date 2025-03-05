@@ -30,7 +30,6 @@ public class UIController : MonoBehaviour
     {
         connectBtn.onClick.AddListener(NetworkManager.Instance.ConnectToPhoton);
         createRoomBtn.onClick.AddListener(NetworkManager.Instance.CreateRoom);
-        joinRandomBtn.onClick.AddListener(NetworkManager.Instance.JoinRandomRoom);
         ShowConnectionUI();
     }
     public void ShowConnectionUI()
