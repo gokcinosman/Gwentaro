@@ -7,6 +7,8 @@ public class ScoreManager : MonoBehaviour, ISubject
     private List<IObserver> observers = new List<IObserver>();
     private int totalScore = 0;
     private List<BoardRow> boardRows = new List<BoardRow>();
+    private int player1TotalScore;
+    private int player2TotalScore;
 
     private void Start()
     {
@@ -18,7 +20,7 @@ public class ScoreManager : MonoBehaviour, ISubject
         }
 
         // Başlangıç toplam skorunu hesapla ve bildir
-        UpdateTotalScore();
+        UpdateTotalScores();
     }
 
     // Yeni bir BoardRow eklemek için
@@ -40,9 +42,7 @@ public class ScoreManager : MonoBehaviour, ISubject
         if (!observers.Contains(observer))
         {
             observers.Add(observer);
-
-            // Yeni observer'a mevcut toplam skoru hemen bildir
-            observer.OnNotify(totalScore.ToString(), null);
+            observer.OnNotify(GetTotalScoreMessage(), null);
         }
     }
 
@@ -56,43 +56,54 @@ public class ScoreManager : MonoBehaviour, ISubject
     }
 
     // Observer'lara bildirim gönderir
-    public void NotifyObservers(string message)
+    public void NotifyObservers()
     {
-
         foreach (var observer in observers)
         {
             if (observer != null)
             {
-                observer.OnNotify(message, null);
+                observer.OnNotify(GetTotalScoreMessage(), null);
             }
-
         }
     }
 
     // Toplam skoru günceller ve observer'lara bildirim gönderir
-    public void UpdateTotalScore()
+    public void UpdateTotalScores()
     {
-        int oldScore = totalScore;
-        CalculateTotalScore();
+        int oldP1Score = player1TotalScore;
+        int oldP2Score = player2TotalScore;
 
-        if (oldScore != totalScore)
+        CalculateTotalScores();
+
+        if (oldP1Score != player1TotalScore || oldP2Score != player2TotalScore)
         {
-            NotifyObservers(totalScore.ToString());
+            NotifyObservers();
         }
     }
 
-    // Tüm satırların toplam değerini hesaplar
-    private void CalculateTotalScore()
+    private void CalculateTotalScores()
     {
-        totalScore = 0;
+        player1TotalScore = 0;
+        player2TotalScore = 0;
+
         foreach (var row in boardRows)
         {
             if (row != null)
             {
-                totalScore += row.GetTotalPower();
+                if (row.ownerPlayerId == 0)
+                    player1TotalScore += row.GetTotalPower();
+                else if (row.ownerPlayerId == 1)
+                    player2TotalScore += row.GetTotalPower();
             }
         }
     }
+
+    public string GetTotalScoreMessage()
+    {
+        return $"{player1TotalScore}:{player2TotalScore}";
+    }
+
+
 
     // BoardRow değişikliklerini dinlemek için özel sınıf
     private class RowObserver : IObserver
@@ -108,8 +119,7 @@ public class ScoreManager : MonoBehaviour, ISubject
 
         public void OnNotify(string message, BoardRow source)
         {
-            // BoardRow değiştiğinde toplam skoru güncelle
-            scoreManager.UpdateTotalScore();
+            scoreManager.UpdateTotalScores();
         }
     }
 }

@@ -118,6 +118,7 @@ public class BoardRow : MonoBehaviour
         {
             rowScore = newValue;
             NotifyObservers(rowScore.ToString());
+            scoreManager.UpdateTotalScores();
         }
     }
     #endregion
