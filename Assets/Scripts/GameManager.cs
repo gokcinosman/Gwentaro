@@ -3,7 +3,6 @@ using System.Linq;
 using Photon.Pun;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-
 public class GameManager : MonoBehaviourPun
 {
     public static GameManager Instance;
@@ -13,13 +12,10 @@ public class GameManager : MonoBehaviourPun
     public PlayerManager player1, player2;
     public List<BoardRow> player1Rows = new List<BoardRow>(), player2Rows = new List<BoardRow>();
     public BoardRow[] boardRows;
-
     private int currentTurnPlayer;
     private int player1Score = 0, player2Score = 0, currentRound = 1;
     private bool gameOver = false, player1Passed = false, player2Passed = false;
-
     public int CurrentTurnPlayer => currentTurnPlayer;
-
     void Awake()
     {
         if (Instance == null)
@@ -34,9 +30,7 @@ public class GameManager : MonoBehaviourPun
         }
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
-
     void OnDestroy() => SceneManager.sceneLoaded -= OnSceneLoaded;
-
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         if (scene.name == "CardScene")
@@ -45,7 +39,6 @@ public class GameManager : MonoBehaviourPun
             AssignDecks();
         }
     }
-
     void AssignDecks()
     {
         Deck[] allDecks = FindObjectsOfType<Deck>();
@@ -60,7 +53,6 @@ public class GameManager : MonoBehaviourPun
                 player2Deck = deck;
             }
         }
-
         // Eğer desteler otomatik atanmazsa, her oyuncuya özel oluştur
         if (player1Deck == null)
         {
@@ -76,18 +68,76 @@ public class GameManager : MonoBehaviourPun
         GameObject deckObj = new GameObject($"Player{playerId}_Deck");
         Deck newDeck = deckObj.AddComponent<Deck>();
         newDeck.ownerPlayerId = playerId;
-
-        // Oyuncuya özel kartlar oluştur
-        newDeck.GenerateDeck(playerId);
-
+        // Eğer bu oyuncunun kaydedilmiş bir destesi varsa, onu yükle
+        if (playerId == PhotonNetwork.LocalPlayer.ActorNumber - 1 && PlayerPrefs.HasKey("PlayerDeck"))
+        {
+            LoadPlayerDeck(newDeck);
+        }
+        else
+        {
+            // Kaydedilmiş deste yoksa, rastgele kartlar oluştur
+            newDeck.GenerateDeck(playerId);
+        }
         return newDeck;
     }
-
+    // Oyuncunun kaydedilmiş destesini yükle
+    private void LoadPlayerDeck(Deck deck)
+    {
+        try
+        {
+            // PlayerPrefs'ten deste verilerini al
+            string deckJson = PlayerPrefs.GetString("PlayerDeck");
+            DeckData deckData = JsonUtility.FromJson<DeckData>(deckJson);
+            if (deckData != null && deckData.cardNames != null && deckData.cardNames.Length > 0)
+            {
+                // Lider kartını yükle
+                CardStats leaderCard = Resources.Load<CardStats>($"Cards/{deckData.leaderCardName}");
+                // Deste kartlarını yükle
+                List<CardStats> deckCards = new List<CardStats>();
+                foreach (string cardName in deckData.cardNames)
+                {
+                    CardStats card = Resources.Load<CardStats>($"Cards/{cardName}");
+                    if (card != null)
+                    {
+                        deckCards.Add(card);
+                    }
+                }
+                // Desteyi oluştur
+                if (deckCards.Count > 0)
+                {
+                    // Kaydedilmiş kartlardan deste oluştur
+                    deck.GenerateDeckFromCards(deck.ownerPlayerId, deckCards, leaderCard);
+                    Debug.Log($"Oyuncu destesi yüklendi: {deckCards.Count} kart");
+                }
+                else
+                {
+                    Debug.LogWarning("Kaydedilmiş destede kart bulunamadı, rastgele deste oluşturuluyor.");
+                    deck.GenerateDeck(deck.ownerPlayerId);
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Geçerli deste verisi bulunamadı, rastgele deste oluşturuluyor.");
+                deck.GenerateDeck(deck.ownerPlayerId);
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Deste yüklenirken hata oluştu: {e.Message}");
+            deck.GenerateDeck(deck.ownerPlayerId);
+        }
+    }
+    // Deste verilerini saklamak için yardımcı sınıf
+    [System.Serializable]
+    private class DeckData
+    {
+        public string[] cardNames;
+        public string leaderCardName;
+    }
     void SwapMeleeAndSiegeParents()
     {
         Transform player1MeleeParent = null, player1SiegeParent = null;
         Transform player2MeleeParent = null, player2SiegeParent = null;
-
         // BoardRow'ları tarayarak Melee ve Siege olanları bul
         foreach (var row in boardRows)
         {
@@ -102,34 +152,28 @@ public class GameManager : MonoBehaviourPun
                 if (row.rowType == CardType.Siege) player2SiegeParent = row.transform.parent;
             }
         }
-
         // Eğer parent'lar bulunduysa sıralarını değiştir
         if (player1MeleeParent != null && player1SiegeParent != null)
         {
             int player1MeleeIndex = player1MeleeParent.GetSiblingIndex();
             int player1SiegeIndex = player1SiegeParent.GetSiblingIndex();
-
             player1MeleeParent.SetSiblingIndex(player1SiegeIndex);
             player1SiegeParent.SetSiblingIndex(player1MeleeIndex);
         }
-
         if (player2MeleeParent != null && player2SiegeParent != null)
         {
             int player2MeleeIndex = player2MeleeParent.GetSiblingIndex();
             int player2SiegeIndex = player2SiegeParent.GetSiblingIndex();
-
             player2MeleeParent.SetSiblingIndex(player2SiegeIndex);
             player2SiegeParent.SetSiblingIndex(player2MeleeIndex);
         }
     }
-
     void AssignBoardRows()
     {
         boardRows = FindObjectsOfType<BoardRow>();
         enemyBoardObject = GameObject.Find("Board_Player1");
         player1Rows.Clear();
         player2Rows.Clear();
-
         foreach (var row in boardRows.OrderByDescending(r => r.transform.position.y))
         {
             if (row.ownerPlayerId == 0)
@@ -145,15 +189,10 @@ public class GameManager : MonoBehaviourPun
         if (localPlayerId == 1) // Player 2 ise board'u döndür
         {
             enemyBoardObject.transform.SetSiblingIndex(0);
-
             // Melee ve Siege parent'larını değiştir
             SwapMeleeAndSiegeParents();
         }
-
     }
-
-
-
     [PunRPC]
     void CloseUI()
     {
@@ -161,16 +200,12 @@ public class GameManager : MonoBehaviourPun
         {
             uiObject.SetActive(false);
         }
-
     }
-
     [PunRPC]
     public void PassTurn(int playerId)
     {
-
         if (playerId == 0) player1Passed = true;
         else if (playerId == 1) player2Passed = true;
-
         if (player1Passed && player2Passed)
         {
             EndRound();
@@ -182,12 +217,9 @@ public class GameManager : MonoBehaviourPun
             {
                 return;
             }
-
             SetCurrentTurnPlayer(nextPlayer);
         }
     }
-
-
     [PunRPC]
     public void StartGame()
     {
@@ -200,24 +232,20 @@ public class GameManager : MonoBehaviourPun
         }
         photonView.RPC("CloseUI", RpcTarget.All);
     }
-
     void LoadGameScene()
     {
         if (PhotonNetwork.IsMasterClient)
             PhotonNetwork.LoadLevel("CardScene");
     }
-
     void SetPlayersID()
     {
         player1 = new GameObject("Player1").AddComponent<PlayerManager>();
         player1.transform.SetParent(transform);
         player1.playerId = 0;
-
         player2 = new GameObject("Player2").AddComponent<PlayerManager>();
         player2.transform.SetParent(transform);
         player2.playerId = 1;
     }
-
     void DetermineFirstPlayer()
     {
         if (PhotonNetwork.IsMasterClient)
@@ -226,7 +254,6 @@ public class GameManager : MonoBehaviourPun
             SetCurrentTurnPlayer(firstPlayer);
         }
     }
-
     void SetCurrentTurnPlayer(int playerId)
     {
         if (PhotonNetwork.IsMasterClient)
@@ -234,17 +261,14 @@ public class GameManager : MonoBehaviourPun
             photonView.RPC("SetTurnRPC", RpcTarget.All, playerId);
         }
     }
-
     [PunRPC]
     public void SetTurnRPC(int playerId)
     {
         currentTurnPlayer = playerId;
-
         // SyncTurn'ü kaldırdık, sadece UI bilgilendirmesi yapıyoruz
         bool isMyTurn = (PhotonNetwork.LocalPlayer.ActorNumber - 1) == currentTurnPlayer;
         Debug.Log(isMyTurn ? "Senin sıran" : "Rakibin sırası");
     }
-
     [PunRPC]
     public void EndTurnRPC()
     {
@@ -252,7 +276,6 @@ public class GameManager : MonoBehaviourPun
         int nextPlayer = (currentTurnPlayer + 1) % 2;
         SetCurrentTurnPlayer(nextPlayer);
     }
-
     public void EndTurn()
     {
         int localPlayerId = PhotonNetwork.LocalPlayer.ActorNumber - 1;
@@ -260,42 +283,32 @@ public class GameManager : MonoBehaviourPun
         {
             photonView.RPC("EndTurnRPC", RpcTarget.All);
         }
-
     }
-
     public void PlayCard(int playerId, Card card, BoardRow row)
     {
         Debug.Log($"[PlayCard] Oyuncu {playerId} kart oynuyor. Şu anki sıra: {currentTurnPlayer}");
-
         // Eğer oyuncu pas geçtiyse kart oynayamasın
         if ((playerId == 0 && player1Passed) || (playerId == 1 && player2Passed))
         {
             Debug.LogError($"[PlayCard] HATA! Oyuncu {playerId} pas geçtiği halde kart oynayamaz!");
             return;
         }
-
         if (playerId != currentTurnPlayer)
         {
             Debug.LogError($"[PlayCard] HATA! Oyuncu {playerId} sırası değilken kart oynuyor!");
             return;
         }
-
         int rowIndex = System.Array.IndexOf(boardRows, row);
         PhotonView cardPhotonView = card.GetComponent<PhotonView>();
         if (cardPhotonView == null) return;
-
         photonView.RPC("PlayCardRPC", RpcTarget.All, playerId, cardPhotonView.ViewID, rowIndex);
     }
-
     [PunRPC]
     void PlayCardRPC(int playerId, int cardViewID, int rowIndex)
     {
-
         BoardRow targetRow = boardRows[rowIndex];
         Card card = PhotonView.Find(cardViewID)?.GetComponent<Card>();
-
         if (card == null) return;
-
         bool success = targetRow.AddCard(card, playerId);
         if (success)
         {
@@ -305,21 +318,17 @@ public class GameManager : MonoBehaviourPun
                 StartCoroutine(DelayedEndTurn());
             }
         }
-
     }
-
     System.Collections.IEnumerator DelayedEndTurn()
     {
         yield return null; // Bir frame bekle
         photonView.RPC("EndTurnRPC", RpcTarget.All);
     }
-
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space) && !gameOver)
         {
             int localPlayerId = PhotonNetwork.LocalPlayer.ActorNumber - 1;
-
             if (localPlayerId == currentTurnPlayer)
             {
                 Debug.Log($"[Update] Oyuncu {localPlayerId} space tuşuyla pas geçti.");
@@ -327,18 +336,13 @@ public class GameManager : MonoBehaviourPun
             }
         }
     }
-
-
     public void EndRound()
     {
         if (gameOver) return;
-
         int player1Power = CalculateTotalPower(player1Rows);
         int player2Power = CalculateTotalPower(player2Rows);
-
         if (player1Power > player2Power) player1Score++;
         else if (player2Power > player1Power) player2Score++;
-
         if (player1Score == 2 || player2Score == 2)
         {
             gameOver = true;
@@ -348,13 +352,11 @@ public class GameManager : MonoBehaviourPun
             StartNewRound();
         }
     }
-
     void StartNewRound()
     {
         currentRound++;
         player1Passed = player2Passed = false;
     }
-
     int CalculateTotalPower(List<BoardRow> rows)
     {
         int totalPower = 0;
