@@ -146,6 +146,7 @@ GameObject:
   - component: {fileID: 206049578851501469}
   - component: {fileID: 4396405918308546547}
   - component: {fileID: 7043603899835832321}
+  - component: {fileID: 8715092880606607820}
   m_Layer: 5
   m_Name: CardAppereance
   m_TagString: Slot
@@ -173,7 +174,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 8.6949, y: -12.2519}
-  m_SizeDelta: {x: 131.5098, y: 183.2684}
+  m_SizeDelta: {x: 200, y: 400}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &206049578851501469
 CanvasRenderer:
@@ -235,6 +236,19 @@ MonoBehaviour:
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
+--- !u!114 &8715092880606607820
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3040602727110671253}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aeb6cf89968269d47b3dddc254f192b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cardStats: {fileID: 11400000, guid: 7dac172bf3df2fb4b957ad5b9c291ee1, type: 2}
 --- !u!1 &3327239182216128943
 GameObject:
   m_ObjectHideFlags: 0
@@ -272,8 +286,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.0012622, y: -111.645996}
-  m_SizeDelta: {x: 131.51, y: 53.3839}
+  m_AnchoredPosition: {x: 0.0747, y: -173.52914}
+  m_SizeDelta: {x: 219.5408, y: 71.6796}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8830975130057698936
 CanvasRenderer:
@@ -801,8 +815,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 116, y: 166}
+  m_AnchoredPosition: {x: 0, y: 32.467}
+  m_SizeDelta: {x: 200, y: 335.07}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4064154611211486873
 CanvasRenderer:
@@ -905,7 +919,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6575886424412743620}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2bc15dae502b775479afd4c3dd426edb, type: 3}
   m_Name: 
@@ -1343,8 +1357,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.0019336, y: -110.668976}
-  m_SizeDelta: {x: 131.51, y: 55.338}
+  m_AnchoredPosition: {x: 0.0734, y: -172.21727}
+  m_SizeDelta: {x: 219.5408, y: 74.3035}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4395127506433113027
 CanvasRenderer:

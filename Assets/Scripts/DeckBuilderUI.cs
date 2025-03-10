@@ -15,13 +15,13 @@ public class DeckBuilderUI : MonoBehaviour
     [SerializeField] private ScrollRect cardCollectionScrollRect;
     [Header("Oyuncu Destesi")]
     [SerializeField] private GameObject playerDeckPanel;
-    [SerializeField] private Transform playerDeckContent;
+    [SerializeField] public Transform playerDeckContent;
     [SerializeField] private TextMeshProUGUI deckInfoText;
     [Header("Lider Kartı")]
     [SerializeField] private GameObject leaderCardPanel;
-    [SerializeField] private Transform leaderCardHolder;
+    [SerializeField] public Transform leaderCardHolder;
     [SerializeField] private GameObject leaderSelectionPanel;
-    [SerializeField] private Transform leaderSelectionContent;
+    [SerializeField] public Transform leaderSelectionContent;
     [Header("Filtreler")]
     [SerializeField] private TMP_Dropdown factionDropdown;
     [SerializeField] private TMP_Dropdown cardTypeDropdown;
@@ -255,6 +255,14 @@ public class DeckBuilderUI : MonoBehaviour
                 {
                     cardButton.onClick.AddListener(() => onCardClicked(cardStats));
                 }
+                // CardBuildDeck bileşenini ekle (eğer yoksa)
+                CardBuildDeck cardBuildDeck = cardObj.GetComponent<CardBuildDeck>();
+                if (cardBuildDeck == null)
+                {
+                    cardBuildDeck = cardObj.AddComponent<CardBuildDeck>();
+                }
+                // CardStats referansını doğrudan ayarla
+                cardBuildDeck.SetCardStats(cardStats);
             }
         }
         // ScrollRect'i yeniden ayarla
@@ -288,6 +296,14 @@ public class DeckBuilderUI : MonoBehaviour
                 {
                     cardButton.onClick.AddListener(() => onCardClicked(cardStats));
                 }
+                // CardBuildDeck bileşenini ekle (eğer yoksa)
+                CardBuildDeck cardBuildDeck = cardObj.GetComponent<CardBuildDeck>();
+                if (cardBuildDeck == null)
+                {
+                    cardBuildDeck = cardObj.AddComponent<CardBuildDeck>();
+                }
+                // CardStats referansını doğrudan ayarla
+                cardBuildDeck.SetCardStats(cardStats);
             }
         }
         // ScrollRect'i yeniden ayarla
@@ -325,7 +341,12 @@ public class DeckBuilderUI : MonoBehaviour
         {
             Destroy(child.gameObject);
         }
-        // Lider kartını göster
+        // Lider kartı yoksa çık
+        if (leaderCard == null)
+        {
+            return;
+        }
+        // Lider kartını oluştur
         GameObject cardObj = Instantiate(cardPrefab, leaderCardHolder);
         Card card = cardObj.GetComponent<Card>();
         // Kart bilgilerini ayarla
@@ -343,6 +364,14 @@ public class DeckBuilderUI : MonoBehaviour
             {
                 cardButton.onClick.AddListener(() => onLeaderClicked());
             }
+            // CardBuildDeck bileşenini ekle (eğer yoksa)
+            CardBuildDeck cardBuildDeck = cardObj.GetComponent<CardBuildDeck>();
+            if (cardBuildDeck == null)
+            {
+                cardBuildDeck = cardObj.AddComponent<CardBuildDeck>();
+            }
+            // CardStats referansını doğrudan ayarla
+            cardBuildDeck.SetCardStats(leaderCard);
         }
     }
     // Lider seçim panelini göster
@@ -378,6 +407,14 @@ public class DeckBuilderUI : MonoBehaviour
                 {
                     cardButton.onClick.AddListener(() => onLeaderSelected(leaderCard));
                 }
+                // CardBuildDeck bileşenini ekle (eğer yoksa)
+                CardBuildDeck cardBuildDeck = cardObj.GetComponent<CardBuildDeck>();
+                if (cardBuildDeck == null)
+                {
+                    cardBuildDeck = cardObj.AddComponent<CardBuildDeck>();
+                }
+                // CardStats referansını doğrudan ayarla
+                cardBuildDeck.SetCardStats(leaderCard);
             }
         }
         // ScrollRect'i yeniden ayarla

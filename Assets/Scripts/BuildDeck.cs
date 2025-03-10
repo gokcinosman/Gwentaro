@@ -43,6 +43,17 @@ public class BuildDeck : MonoBehaviourPunCallbacks
     {
         // Filtrelenmiş kartları hazırla
         FilterCards();
+        // Başlangıçta kartları oluştur
+        if (deckUI != null)
+        {
+            // Koleksiyon kartlarını oluştur
+            deckUI.UpdateCardCollection(filteredCards, cardPrefab, AddCardToDeck);
+            // Deste kartlarını oluştur (eğer varsa)
+            if (playerDeck.Count > 0)
+            {
+                deckUI.UpdatePlayerDeck(playerDeck, cardPrefab, RemoveCardFromDeck);
+            }
+        }
         // UI'ı güncelle
         UpdateUI();
     }
@@ -54,12 +65,11 @@ public class BuildDeck : MonoBehaviourPunCallbacks
         filteredCards = new List<CardStats>(allCards);
     }
     // UI güncellemelerini yönet
-    private void UpdateUI()
+    public void UpdateUI()
     {
         if (deckUI != null)
         {
-            deckUI.UpdateCardCollection(filteredCards, cardPrefab, AddCardToDeck);
-            deckUI.UpdatePlayerDeck(playerDeck, cardPrefab, RemoveCardFromDeck);
+            // Sadece deste bilgilerini güncelle
             deckUI.UpdateDeckInfo(playerDeck, maxDeckSize, minDeckSize, selectedLeader);
             // Lider kartı varsa güncelle
             if (selectedLeader != null)
@@ -103,6 +113,15 @@ public class BuildDeck : MonoBehaviourPunCallbacks
             }
             return;
         }
+        // Eğer kart zaten destede varsa ekleme
+        if (playerDeck.Contains(cardStats))
+        {
+            if (deckUI != null)
+            {
+                deckUI.ShowError($"Bu kart zaten destede mevcut: {cardStats.name}");
+            }
+            return;
+        }
         // Kartı desteye ekle
         playerDeck.Add(cardStats);
         // UI'ı güncelle
@@ -141,20 +160,14 @@ public class BuildDeck : MonoBehaviourPunCallbacks
     // Kartları filtrele
     private void FilterCards()
     {
-        // Kartları filtrele
+        // Önce tüm kartları al
         filteredCards = new List<CardStats>(allCards);
-        // Faction filtresi
-        if (currentFaction != "Tümü")
-        {
-            // Burada faction'a göre filtreleme yapılacak
-            // Örnek: filteredCards = filteredCards.Where(c => c.faction == currentFaction).ToList();
-        }
-        // Kart tipi filtresi
+        // Kart tipi filtreleme
         if (currentCardType != CardType.None)
         {
             filteredCards = filteredCards.Where(c => c.cardType == currentCardType).ToList();
         }
-        // Arama metni filtresi
+        // Arama metni filtreleme
         if (!string.IsNullOrEmpty(currentSearchText))
         {
             filteredCards = filteredCards.Where(c =>
@@ -164,8 +177,11 @@ public class BuildDeck : MonoBehaviourPunCallbacks
         }
         // Lider kartlarını koleksiyonda gösterme
         filteredCards = filteredCards.Where(c => c.cardStatue != CardStatus.Leader).ToList();
-        // UI'ı güncelle
-        UpdateUI();
+        // Koleksiyon kartlarını güncelle
+        if (deckUI != null)
+        {
+            deckUI.UpdateCardCollection(filteredCards, cardPrefab, AddCardToDeck);
+        }
     }
     // Desteyi kaydet
     public void SaveDeck()
