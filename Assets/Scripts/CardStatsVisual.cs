@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-
 public class CardStatsVisual : MonoBehaviour
 {
     public CardStats cardStats;
@@ -15,14 +14,24 @@ public class CardStatsVisual : MonoBehaviour
     public TextMeshProUGUI cardValueText;
     public TextMeshProUGUI cardNameText;
     public TextMeshProUGUI cardDescText;
-
+    public CardBuildDeck cardBuildDeck;
+    private void Awake()
+    {
+        cardStats = cardBuildDeck.cardStats;
+        SetCardSprite();
+        SetCardName();
+        SetCardDescription();
+        SetCardClassSprite();
+        SetCardTypeSprite();
+        SetValueText();
+        SetValueSprite();
+    }
     private void SetValueSprite()
     {
         if (cardStats.cardStatue == CardStatus.Hero)
         {
             cardNormalValueSprite.gameObject.SetActive(false);
             cardHeroValueSprite.gameObject.SetActive(true);
-
         }
         else if (cardStats.cardStatue == CardStatus.Special)
         {
@@ -77,7 +86,6 @@ public class CardStatsVisual : MonoBehaviour
             case CardClass.Agile:
                 cardClassSprite.sprite = cardStats.agileSpriteIcon;
                 break;
-
             case CardClass.Medic:
                 cardClassSprite.sprite = cardStats.medicSpriteIcon;
                 break;

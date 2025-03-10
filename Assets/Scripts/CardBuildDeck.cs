@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 public class CardBuildDeck : MonoBehaviour, IPointerClickHandler
 {
-    [SerializeField] private CardStats cardStats; // Doğrudan CardStats referansı
+    [SerializeField] public CardStats cardStats; // Doğrudan CardStats referansı
     private BuildDeck buildDeck;
     private float doubleClickTime = 0.3f; // Çift tıklama için zaman aralığı
     private float lastClickTime = 0f;
