@@ -248,7 +248,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aeb6cf89968269d47b3dddc254f192b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cardStats: {fileID: 11400000, guid: 7dac172bf3df2fb4b957ad5b9c291ee1, type: 2}
+  cardStats: {fileID: 0}
 --- !u!1 &3327239182216128943
 GameObject:
   m_ObjectHideFlags: 0
@@ -523,11 +523,11 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 7136127819379798370}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -35.68, y: -3.5205}
-  m_SizeDelta: {x: 32.2756, y: 38.2923}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 4.9433, y: -4.0618}
+  m_SizeDelta: {x: 46.1567, y: 50.4382}
+  m_Pivot: {x: 0, y: 1}
 --- !u!222 &4590166924704165631
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -788,7 +788,6 @@ GameObject:
   - component: {fileID: 6867289221753264663}
   - component: {fileID: 2785729777315962427}
   - component: {fileID: 2701790370959320597}
-  - component: {fileID: 6484516301854887976}
   - component: {fileID: 2029910309370723395}
   - component: {fileID: 322152510781761731}
   m_Layer: 5
@@ -846,7 +845,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 77de7cbd40e5f2bd0b3d5e22a59cb0e9, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -912,26 +911,6 @@ MonoBehaviour:
   m_EffectColor: {r: 0, g: 0, b: 0, a: 0.5}
   m_EffectDistance: {x: 10, y: 10}
   m_UseGraphicAlpha: 1
---- !u!114 &6484516301854887976
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6575886424412743620}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2bc15dae502b775479afd4c3dd426edb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moveSpeed: 0.1
-  xOffset: 200
-  cardImage: {fileID: 0}
-  cardFrame: {fileID: 0}
-  cardNameText: {fileID: 0}
-  cardValueText: {fileID: 0}
-  cardDescText: {fileID: 0}
-  cardTypeIcon: {fileID: 0}
 --- !u!114 &2029910309370723395
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1074,7 +1053,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 80, y: 80}
+  m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &9088421950332861121
 CanvasRenderer:
@@ -1280,11 +1259,11 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 7136127819379798370}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0.5}
-  m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 3, y: 0}
-  m_SizeDelta: {x: 38.6398, y: 37.5746}
-  m_Pivot: {x: 0, y: 0.5}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 6.1, y: -9.5}
+  m_SizeDelta: {x: 45, y: 45}
+  m_Pivot: {x: 0, y: 1}
 --- !u!222 &6835858625013497607
 CanvasRenderer:
   m_ObjectHideFlags: 0

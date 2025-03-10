@@ -238,32 +238,26 @@ public class DeckBuilderUI : MonoBehaviour
         // Filtrelenmiş kartları göster
         foreach (CardStats cardStats in filteredCards)
         {
+            // Kart prefabını oluştur
             GameObject cardObj = Instantiate(cardPrefab, cardCollectionContent);
-            Card card = cardObj.GetComponent<Card>();
-            // Kart bilgilerini ayarla
-            if (card != null)
+            // Kart adını ayarla (CardBuildDeck'in kart adına göre eşleştirme yapabilmesi için)
+            cardObj.name = cardStats.name;
+            // Karta tıklama olayını ekle
+            Button cardButton = cardObj.GetComponent<Button>();
+            if (cardButton != null)
             {
-                card.cardStats = cardStats;
-                // Kart görselini güncelle
-                if (card.cardVisual != null)
-                {
-                    card.cardVisual.UpdateVisual(cardStats);
-                }
-                // Karta tıklama olayını ekle
-                Button cardButton = cardObj.GetComponent<Button>();
-                if (cardButton != null)
-                {
-                    cardButton.onClick.AddListener(() => onCardClicked(cardStats));
-                }
-                // CardBuildDeck bileşenini ekle (eğer yoksa)
-                CardBuildDeck cardBuildDeck = cardObj.GetComponent<CardBuildDeck>();
-                if (cardBuildDeck == null)
-                {
-                    cardBuildDeck = cardObj.AddComponent<CardBuildDeck>();
-                }
-                // CardStats referansını doğrudan ayarla
-                cardBuildDeck.SetCardStats(cardStats);
+                cardButton.onClick.AddListener(() => onCardClicked(cardStats));
             }
+            // CardBuildDeck bileşenini ekle (eğer yoksa)
+            CardBuildDeck cardBuildDeck = cardObj.GetComponent<CardBuildDeck>();
+            if (cardBuildDeck == null)
+            {
+                cardBuildDeck = cardObj.AddComponent<CardBuildDeck>();
+            }
+            // CardStats referansını doğrudan ayarla
+            cardBuildDeck.SetCardStats(cardStats);
+            // Debug bilgisi
+            Debug.Log($"[DeckBuilderUI] Kart oluşturuldu: {cardStats.name}, CardBuildDeck atandı: {cardBuildDeck != null}");
         }
         // ScrollRect'i yeniden ayarla
         RefreshScrollRects();
@@ -279,32 +273,26 @@ public class DeckBuilderUI : MonoBehaviour
         // Destedeki kartları göster
         foreach (CardStats cardStats in playerDeck)
         {
+            // Kart prefabını oluştur
             GameObject cardObj = Instantiate(cardPrefab, playerDeckContent);
-            Card card = cardObj.GetComponent<Card>();
-            // Kart bilgilerini ayarla
-            if (card != null)
+            // Kart adını ayarla (CardBuildDeck'in kart adına göre eşleştirme yapabilmesi için)
+            cardObj.name = cardStats.name;
+            // Karta tıklama olayını ekle
+            Button cardButton = cardObj.GetComponent<Button>();
+            if (cardButton != null)
             {
-                card.cardStats = cardStats;
-                // Kart görselini güncelle
-                if (card.cardVisual != null)
-                {
-                    card.cardVisual.UpdateVisual(cardStats);
-                }
-                // Karta tıklama olayını ekle
-                Button cardButton = cardObj.GetComponent<Button>();
-                if (cardButton != null)
-                {
-                    cardButton.onClick.AddListener(() => onCardClicked(cardStats));
-                }
-                // CardBuildDeck bileşenini ekle (eğer yoksa)
-                CardBuildDeck cardBuildDeck = cardObj.GetComponent<CardBuildDeck>();
-                if (cardBuildDeck == null)
-                {
-                    cardBuildDeck = cardObj.AddComponent<CardBuildDeck>();
-                }
-                // CardStats referansını doğrudan ayarla
-                cardBuildDeck.SetCardStats(cardStats);
+                cardButton.onClick.AddListener(() => onCardClicked(cardStats));
             }
+            // CardBuildDeck bileşenini ekle (eğer yoksa)
+            CardBuildDeck cardBuildDeck = cardObj.GetComponent<CardBuildDeck>();
+            if (cardBuildDeck == null)
+            {
+                cardBuildDeck = cardObj.AddComponent<CardBuildDeck>();
+            }
+            // CardStats referansını doğrudan ayarla
+            cardBuildDeck.SetCardStats(cardStats);
+            // Debug bilgisi
+            Debug.Log($"[DeckBuilderUI] Deste kartı oluşturuldu: {cardStats.name}, CardBuildDeck atandı: {cardBuildDeck != null}");
         }
         // ScrollRect'i yeniden ayarla
         RefreshScrollRects();
@@ -341,23 +329,13 @@ public class DeckBuilderUI : MonoBehaviour
         {
             Destroy(child.gameObject);
         }
-        // Lider kartı yoksa çık
-        if (leaderCard == null)
+        // Lider kartını göster
+        if (leaderCard != null)
         {
-            return;
-        }
-        // Lider kartını oluştur
-        GameObject cardObj = Instantiate(cardPrefab, leaderCardHolder);
-        Card card = cardObj.GetComponent<Card>();
-        // Kart bilgilerini ayarla
-        if (card != null)
-        {
-            card.cardStats = leaderCard;
-            // Kart görselini güncelle
-            if (card.cardVisual != null)
-            {
-                card.cardVisual.UpdateVisual(leaderCard);
-            }
+            // Kart prefabını oluştur
+            GameObject cardObj = Instantiate(cardPrefab, leaderCardHolder);
+            // Kart adını ayarla (CardBuildDeck'in kart adına göre eşleştirme yapabilmesi için)
+            cardObj.name = leaderCard.name;
             // Karta tıklama olayını ekle
             Button cardButton = cardObj.GetComponent<Button>();
             if (cardButton != null)
@@ -372,6 +350,8 @@ public class DeckBuilderUI : MonoBehaviour
             }
             // CardStats referansını doğrudan ayarla
             cardBuildDeck.SetCardStats(leaderCard);
+            // Debug bilgisi
+            Debug.Log($"[DeckBuilderUI] Lider kartı oluşturuldu: {leaderCard.name}, CardBuildDeck atandı: {cardBuildDeck != null}");
         }
     }
     // Lider seçim panelini göster
@@ -390,32 +370,26 @@ public class DeckBuilderUI : MonoBehaviour
         // Lider kartlarını göster
         foreach (CardStats leaderCard in leaderCards)
         {
+            // Kart prefabını oluştur
             GameObject cardObj = Instantiate(cardPrefab, leaderSelectionContent);
-            Card card = cardObj.GetComponent<Card>();
-            // Kart bilgilerini ayarla
-            if (card != null)
+            // Kart adını ayarla (CardBuildDeck'in kart adına göre eşleştirme yapabilmesi için)
+            cardObj.name = leaderCard.name;
+            // Karta tıklama olayını ekle
+            Button cardButton = cardObj.GetComponent<Button>();
+            if (cardButton != null)
             {
-                card.cardStats = leaderCard;
-                // Kart görselini güncelle
-                if (card.cardVisual != null)
-                {
-                    card.cardVisual.UpdateVisual(leaderCard);
-                }
-                // Karta tıklama olayını ekle
-                Button cardButton = cardObj.GetComponent<Button>();
-                if (cardButton != null)
-                {
-                    cardButton.onClick.AddListener(() => onLeaderSelected(leaderCard));
-                }
-                // CardBuildDeck bileşenini ekle (eğer yoksa)
-                CardBuildDeck cardBuildDeck = cardObj.GetComponent<CardBuildDeck>();
-                if (cardBuildDeck == null)
-                {
-                    cardBuildDeck = cardObj.AddComponent<CardBuildDeck>();
-                }
-                // CardStats referansını doğrudan ayarla
-                cardBuildDeck.SetCardStats(leaderCard);
+                cardButton.onClick.AddListener(() => onLeaderSelected(leaderCard));
             }
+            // CardBuildDeck bileşenini ekle (eğer yoksa)
+            CardBuildDeck cardBuildDeck = cardObj.GetComponent<CardBuildDeck>();
+            if (cardBuildDeck == null)
+            {
+                cardBuildDeck = cardObj.AddComponent<CardBuildDeck>();
+            }
+            // CardStats referansını doğrudan ayarla
+            cardBuildDeck.SetCardStats(leaderCard);
+            // Debug bilgisi
+            Debug.Log($"[DeckBuilderUI] Lider seçim kartı oluşturuldu: {leaderCard.name}, CardBuildDeck atandı: {cardBuildDeck != null}");
         }
         // ScrollRect'i yeniden ayarla
         RefreshScrollRects();

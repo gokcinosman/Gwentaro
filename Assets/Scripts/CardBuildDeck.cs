@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using UnityEngine.UI; // LayoutRebuilder için
 public class CardBuildDeck : MonoBehaviour, IPointerClickHandler
 {
     [SerializeField] private CardStats cardStats; // Doğrudan CardStats referansı
@@ -19,12 +18,50 @@ public class CardBuildDeck : MonoBehaviour, IPointerClickHandler
         if (buildDeck == null)
         {
             Debug.LogError("[CardBuildDeck] BuildDeck referansı bulunamadı!");
+            return; // BuildDeck yoksa devam etme
         }
-        // Eğer Card bileşeni varsa, ondan CardStats'ı al
-        Card card = GetComponent<Card>();
-        if (card != null && card.cardStats != null)
+        // Eğer cardStats null ise ve buildDeck varsa, kart adına göre uygun CardStats'ı bul
+        if (cardStats == null)
         {
-            cardStats = card.cardStats;
+            // Kart adına göre BuildDeck'ten uygun CardStats'ı bul
+            string cardName = gameObject.name;
+            if (cardName.Contains("(Clone)"))
+            {
+                cardName = cardName.Replace("(Clone)", "").Trim();
+            }
+            // Kart adına göre filtrelenmiş kartlardan uygun olanı bul
+            List<CardStats> allCards = buildDeck.GetFilteredCards();
+            CardStats matchingCard = null;
+            // Önce tam eşleşme ara
+            matchingCard = allCards.Find(c => c.name == cardName || c.cardName == cardName);
+            // Tam eşleşme yoksa, içeren bir kart ara
+            if (matchingCard == null)
+            {
+                matchingCard = allCards.Find(c =>
+                    c.name.Contains(cardName) ||
+                    cardName.Contains(c.name) ||
+                    c.cardName.Contains(cardName) ||
+                    cardName.Contains(c.cardName));
+            }
+            // Eğer hala bulunamadıysa ve kart listesi boş değilse, ilk kartı al
+            if (matchingCard == null && allCards.Count > 0)
+            {
+                Debug.LogWarning($"[CardBuildDeck] {cardName} için uygun CardStats bulunamadı, ilk kart atanıyor: {allCards[0].name}");
+                matchingCard = allCards[0];
+            }
+            if (matchingCard != null)
+            {
+                cardStats = matchingCard;
+                Debug.Log($"[CardBuildDeck] {cardName} için CardStats otomatik olarak atandı: {matchingCard.name}");
+            }
+            else
+            {
+                Debug.LogError($"[CardBuildDeck] {cardName} için uygun CardStats bulunamadı ve kart listesi boş!");
+            }
+        }
+        else
+        {
+            Debug.Log($"[CardBuildDeck] CardStats zaten atanmış: {cardStats.name}");
         }
     }
     private void Start()
@@ -70,8 +107,6 @@ public class CardBuildDeck : MonoBehaviour, IPointerClickHandler
     {
         if (cardStats != null && buildDeck != null)
         {
-            // Debug bilgisi ekle
-            Debug.Log($"[CardBuildDeck] Çift tıklama algılandı: {cardStats.name}, Parent: {transform.parent?.name}");
             // Kartın hangi tarafta olduğunu kontrol et
             bool isInDeck = IsInPlayerDeckContent();
             bool isInCollection = IsInCardCollectionContent();

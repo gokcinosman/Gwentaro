@@ -13,27 +13,20 @@ public class Card : MonoBehaviourPun, IPointerDownHandler, IDragHandler, IEndDra
     private Vector2 offset;
     public UnityEvent<Card> BeginDragEvent;
     public UnityEvent<Card> EndDragEvent;
-
     public float selectionOffset = 50;
     public bool selected;
     private BoardRow currentHoveredRow;
     private Deck deck;
     public bool isPlaced = false;
     public CardStats cardStats;
-
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
         deck = FindObjectOfType<Deck>();
-
         if (deck == null)
         {
             Debug.LogError("[Card] Deck bileşeni sahnede bulunamadı! Deck'in sahnede aktif olduğundan emin olun.");
         }
-
-
-
-
     }
     void Start()
     {
@@ -41,11 +34,8 @@ public class Card : MonoBehaviourPun, IPointerDownHandler, IDragHandler, IEndDra
         if (canvas == null)
         {
             Debug.LogWarning("[Card] Canvas bulunamadı");
-
         }
     }
-
-
     public void OnBeginDrag(PointerEventData eventData)
     {
         if (isPlaced || isDragging)
@@ -120,38 +110,31 @@ public class Card : MonoBehaviourPun, IPointerDownHandler, IDragHandler, IEndDra
                 Debug.LogError("[Card] Update sırasında canvas veya rectTransform null!");
                 return;
             }
-
             Vector2 position;
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 (RectTransform)canvas.transform,
                 Input.mousePosition,
                 canvas.worldCamera,
                 out position);
-
             rectTransform.position = canvas.transform.TransformPoint(position);
         }
     }
-
     public void OnEndDrag(PointerEventData eventData)
     {
         if (isPlaced)
             return;
-
         isDragging = false;
         EndDragEvent.Invoke(this);
-
         if (currentHoveredRow != null)
         {
             int currentPlayerId = PhotonNetwork.LocalPlayer.ActorNumber == 1 ? 0 : 1;
             int rowIndex = currentHoveredRow.RowIndex; // BoardRow içindeki indeks
-
             if (rowIndex < 0)
             {
                 Debug.LogError($"[OnEndDrag] HATALI rowIndex: {rowIndex}. BoardRow yanlış ayarlanmış olabilir.");
                 ResetPosition(); // Kartı geri eski yerine götür
                 return;
             }
-
             GameManager.Instance.PlayCard(currentPlayerId, this, currentHoveredRow);
             currentHoveredRow = null;
         }
@@ -161,9 +144,6 @@ public class Card : MonoBehaviourPun, IPointerDownHandler, IDragHandler, IEndDra
             ResetPosition();
         }
     }
-
-
-
     public void Deselect()
     {
         if (selected)
@@ -183,7 +163,6 @@ public class Card : MonoBehaviourPun, IPointerDownHandler, IDragHandler, IEndDra
     {
         if (!isPlaced)
         {
-
             isDragging = false;
             isPlaced = false;
             // Mevcut parent'ın merkezine dönüş
