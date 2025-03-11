@@ -112,10 +112,24 @@ public class CardStatsVisual : MonoBehaviour
     private void SetCardName()
     {
         cardNameText.text = cardStats.cardName;
+        // Dinamik boyutlandırma için TextMeshPro ayarları
+        cardNameText.enableAutoSizing = true;
+        cardNameText.fontSizeMin = 8f;  // Minimum font boyutu
+        cardNameText.fontSizeMax = 20f; // Maksimum font boyutu
+        cardNameText.overflowMode = TextOverflowModes.Truncate;
+        // Metni her zaman ortalı tutmak için
+        cardNameText.alignment = TextAlignmentOptions.Center;
     }
     private void SetCardDescription()
     {
         cardDescText.text = cardStats.cardDesc;
+        // Dinamik boyutlandırma için TextMeshPro ayarları
+        cardDescText.enableAutoSizing = true;
+        cardDescText.fontSizeMin = 6f;  // Minimum font boyutu
+        cardDescText.fontSizeMax = 24f; // Maksimum font boyutu
+        cardDescText.overflowMode = TextOverflowModes.Ellipsis;
+        // Metni her zaman ortalı tutmak için
+        cardDescText.alignment = TextAlignmentOptions.Center;
     }
     private void SetCardSprite()
     {

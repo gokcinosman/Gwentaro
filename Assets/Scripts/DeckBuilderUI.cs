@@ -48,7 +48,7 @@ public class DeckBuilderUI : MonoBehaviour
         // ContentSizeFitter bileşenlerini al
         cardCollectionContentSizeFitter = cardCollectionContent?.GetComponent<ContentSizeFitter>();
         playerDeckContentSizeFitter = playerDeckContent?.GetComponent<ContentSizeFitter>();
-        // leaderSelectionContentSizeFitter = leaderSelectionContent?.GetComponent<ContentSizeFitter>();
+        //  leaderSelectionContentSizeFitter = leaderSelectionContent?.GetComponent<ContentSizeFitter>();
     }
     private void Start()
     {
@@ -90,67 +90,7 @@ public class DeckBuilderUI : MonoBehaviour
         {
             leaderSelectionPanel.SetActive(false);
         }
-        // ScrollRect'leri ayarla
-        SetupScrollRects();
     }
-    private void SetupScrollRects()
-    {
-        if (cardCollectionScrollRect != null)
-        {
-            // ScrollRect'in içeriğinin değişimini dinle
-            cardCollectionScrollRect.onValueChanged.AddListener(OnCardCollectionScrollValueChanged);
-        }
-        // Diğer ScrollRect'ler için de benzer ayarlamalar yapılabilir
-    }
-    private void OnCardCollectionScrollValueChanged(Vector2 scrollPosition)
-    {
-        if (!limitScrolling || cardCollectionScrollRect == null || cardCollectionContent == null)
-            return;
-        // İçerik boyutunu güncelle
-        UpdateContentSize(cardCollectionContent, cardCollectionContentSizeFitter);
-        // Kaydırma sınırlarını ayarla
-        LimitScrolling(cardCollectionScrollRect, cardCollectionContent);
-    }
-    private void UpdateContentSize(Transform content, ContentSizeFitter sizeFitter)
-    {
-        // ContentSizeFitter varsa, bir kare boyutunu güncelle
-        if (sizeFitter != null)
-        {
-            Canvas.ForceUpdateCanvases();
-            sizeFitter.enabled = false;
-            sizeFitter.enabled = true;
-        }
-    }
-    private void LimitScrolling(ScrollRect scrollRect, Transform content)
-    {
-        // ScrollRect ve içerik RectTransform'larını al
-        RectTransform scrollRectTransform = scrollRect.GetComponent<RectTransform>();
-        RectTransform contentRectTransform = content.GetComponent<RectTransform>();
-        if (scrollRectTransform == null || contentRectTransform == null)
-            return;
-        // İçerik boyutu ve görünüm alanı boyutu
-        float contentHeight = contentRectTransform.rect.height;
-        float viewportHeight = scrollRect.viewport.rect.height;
-        // İçerik boyutu görünüm alanından küçükse, kaydırmayı sınırla
-        if (contentHeight <= viewportHeight)
-        {
-            // İçeriği görünüm alanının üstüne hizala
-            Vector2 newPosition = contentRectTransform.anchoredPosition;
-            newPosition.y = 0;
-            contentRectTransform.anchoredPosition = newPosition;
-            return;
-        }
-        // Kaydırma sınırlarını hesapla
-        float maxY = 0; // Üst sınır
-        float minY = -(contentHeight - viewportHeight); // Alt sınır
-        // Ek boşluk ekle
-        minY -= scrollPadding;
-        // Mevcut pozisyonu al ve sınırla
-        Vector2 position = contentRectTransform.anchoredPosition;
-        position.y = Mathf.Clamp(position.y, minY, maxY);
-        contentRectTransform.anchoredPosition = position;
-    }
-    // Arama metni değiştiğinde
     private void OnSearchTextChanged(string searchText)
     {
         if (buildDeck != null)
@@ -158,19 +98,6 @@ public class DeckBuilderUI : MonoBehaviour
             buildDeck.FilterBySearchText(searchText);
         }
     }
-    // Arama filtresini temizle
-    public void ClearSearchFilter()
-    {
-        if (searchInputField != null)
-        {
-            searchInputField.text = "";
-        }
-        if (buildDeck != null)
-        {
-            buildDeck.FilterBySearchText("");
-        }
-    }
-    // Deste oluşturma ekranını aç
     public void OpenDeckBuilder()
     {
         deckBuilderPanel.SetActive(true);
@@ -207,27 +134,81 @@ public class DeckBuilderUI : MonoBehaviour
         }
         // Bir kare daha bekle
         yield return null;
-        // Kaydırma sınırlarını ayarla
-        if (cardCollectionScrollRect != null && cardCollectionContent != null)
+        // İçerik boyutlarını kartlara göre ayarla
+        AdjustContentSize(cardCollectionContent, cardCollectionScrollRect);
+        AdjustContentSize(playerDeckContent, playerDeckPanel.GetComponent<ScrollRect>());
+        //if (leaderSelectionPanel.activeSelf)
+        // {
+        //    AdjustContentSize(leaderSelectionContent, leaderSelectionPanel.GetComponent<ScrollRect>());
+        //}
+        // Canvas'ı tekrar güncelle
+        Canvas.ForceUpdateCanvases();
+    }
+    // İçerik boyutunu kartlara göre ayarlayan yeni metod
+    private void AdjustContentSize(Transform content, ScrollRect scrollRect)
+    {
+        if (content == null || scrollRect == null || content.childCount == 0)
+            return;
+        // Grid Layout Group varsa
+        GridLayoutGroup gridLayout = content.GetComponent<GridLayoutGroup>();
+        if (gridLayout != null)
         {
-            LimitScrolling(cardCollectionScrollRect, cardCollectionContent);
+            int childCount = content.childCount;
+            float cellWidth = gridLayout.cellSize.x;
+            float cellHeight = gridLayout.cellSize.y;
+            float spacingX = gridLayout.spacing.x;
+            float spacingY = gridLayout.spacing.y;
+            // Bir satırdaki maksimum kart sayısını hesapla
+            float viewportWidth = scrollRect.viewport.rect.width;
+            int cardsPerRow = Mathf.Max(1, Mathf.FloorToInt((viewportWidth - gridLayout.padding.left - gridLayout.padding.right + spacingX) / (cellWidth + spacingX)));
+            // Toplam satır sayısını hesapla
+            int rowCount = Mathf.CeilToInt((float)childCount / cardsPerRow);
+            // İçerik yüksekliğini hesapla
+            float contentHeight = (rowCount * cellHeight) + ((rowCount - 1) * spacingY) + gridLayout.padding.top + gridLayout.padding.bottom;
+            // RectTransform'u ayarla
+            RectTransform rectTransform = content.GetComponent<RectTransform>();
+            if (rectTransform != null)
+            {
+                Vector2 sizeDelta = rectTransform.sizeDelta;
+                sizeDelta.y = contentHeight;
+                rectTransform.sizeDelta = sizeDelta;
+            }
+        }
+        // Vertical Layout Group varsa
+        else
+        {
+            VerticalLayoutGroup verticalLayout = content.GetComponent<VerticalLayoutGroup>();
+            if (verticalLayout != null)
+            {
+                float totalHeight = 0;
+                // Tüm çocukların yüksekliğini topla
+                for (int i = 0; i < content.childCount; i++)
+                {
+                    RectTransform childRect = content.GetChild(i).GetComponent<RectTransform>();
+                    if (childRect != null)
+                    {
+                        totalHeight += childRect.rect.height;
+                    }
+                }
+                // Spacing'i ekle
+                totalHeight += verticalLayout.spacing * (content.childCount - 1);
+                // Padding'i ekle
+                totalHeight += verticalLayout.padding.top + verticalLayout.padding.bottom;
+                // RectTransform'u ayarla
+                RectTransform rectTransform = content.GetComponent<RectTransform>();
+                if (rectTransform != null)
+                {
+                    Vector2 sizeDelta = rectTransform.sizeDelta;
+                    sizeDelta.y = totalHeight;
+                    rectTransform.sizeDelta = sizeDelta;
+                }
+            }
         }
     }
-    // Public metot: ScrollRect'leri yeniden ayarla
     public void RefreshScrollRects()
     {
         StartCoroutine(DelayedScrollRectSetup());
     }
-    // Update metodunda sürekli olarak kaydırma sınırlarını kontrol et
-    private void Update()
-    {
-        if (limitScrolling && cardCollectionScrollRect != null && cardCollectionContent != null)
-        {
-            LimitScrolling(cardCollectionScrollRect, cardCollectionContent);
-        }
-    }
-    // BuildDeck sınıfı için UI güncelleme metodları
-    // Kart koleksiyonunu güncelle
     public void UpdateCardCollection(List<CardStats> filteredCards, GameObject cardPrefab, Action<CardStats> onCardClicked)
     {
         // Önce mevcut kartları temizle

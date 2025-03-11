@@ -18,7 +18,7 @@ MonoBehaviour:
   cardValue: 8
   cardName: Catapault
   cardDesc: The gods help those who have better catapults.
-  cardSprite: {fileID: 21300000, guid: 013a981469b73c341b3da84f25389b99, type: 3}
+  cardSprite: {fileID: 21300000, guid: 8b312bf15bfcb9c40bf04f0569439299, type: 3}
   meleeSpriteIcon: {fileID: 21300000, guid: e6d5f07cc68d3bff9b38378a5f0da6aa, type: 3}
   rangedSpriteIcon: {fileID: 21300000, guid: 0c82e250a31fbdbbebe2276701c6a824, type: 3}
   siegeSpriteIcon: {fileID: 21300000, guid: 97c7410b04ac3cf959b43509254d05cd, type: 3}

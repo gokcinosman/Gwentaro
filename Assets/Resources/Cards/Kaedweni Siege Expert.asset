@@ -19,7 +19,7 @@ MonoBehaviour:
   cardName: Kaedweni Siege Expert
   cardDesc: '"You gotta recalibrate the arm by five degrees." "Do what by the what
     now?" '
-  cardSprite: {fileID: 21300000, guid: 013a981469b73c341b3da84f25389b99, type: 3}
+  cardSprite: {fileID: 21300000, guid: ccd2d0aefa7fdf347aa2856fd4e02282, type: 3}
   meleeSpriteIcon: {fileID: 21300000, guid: e6d5f07cc68d3bff9b38378a5f0da6aa, type: 3}
   rangedSpriteIcon: {fileID: 21300000, guid: 0c82e250a31fbdbbebe2276701c6a824, type: 3}
   siegeSpriteIcon: {fileID: 21300000, guid: 97c7410b04ac3cf959b43509254d05cd, type: 3}
