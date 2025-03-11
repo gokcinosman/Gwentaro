@@ -90,9 +90,6 @@ public class GameManager : MonoBehaviourPun
             DeckData deckData = JsonUtility.FromJson<DeckData>(deckJson);
             if (deckData != null && deckData.cardNames != null && deckData.cardNames.Length > 0)
             {
-                // Lider kartını yükle
-                CardStats leaderCard = Resources.Load<CardStats>($"Cards/{deckData.leaderCardName}");
-                // Deste kartlarını yükle
                 List<CardStats> deckCards = new List<CardStats>();
                 foreach (string cardName in deckData.cardNames)
                 {
@@ -106,7 +103,7 @@ public class GameManager : MonoBehaviourPun
                 if (deckCards.Count > 0)
                 {
                     // Kaydedilmiş kartlardan deste oluştur
-                    deck.GenerateDeckFromCards(deck.ownerPlayerId, deckCards, leaderCard);
+                    deck.GenerateDeckFromCards(deck.ownerPlayerId, deckCards);
                     Debug.Log($"Oyuncu destesi yüklendi: {deckCards.Count} kart");
                 }
                 else
@@ -132,7 +129,6 @@ public class GameManager : MonoBehaviourPun
     private class DeckData
     {
         public string[] cardNames;
-        public string leaderCardName;
     }
     void SwapMeleeAndSiegeParents()
     {

@@ -20,7 +20,8 @@ public class Deck : MonoBehaviour
     {
         if (PhotonNetwork.IsMasterClient)
         {
-            GenerateDeck(ownerPlayerId);
+            // Kaydedilmiş desteyi yükle
+            LoadSavedDeck(ownerPlayerId);
         }
         else
         {
@@ -80,7 +81,7 @@ public class Deck : MonoBehaviour
         }
     }
     // Kaydedilmiş deste bilgilerinden kart oluştur
-    public void GenerateDeckFromCards(int playerId, List<CardStats> deckCards, CardStats leaderCard = null)
+    public void GenerateDeckFromCards(int playerId, List<CardStats> deckCards)
     {
         cards = new List<Card>();
         // Önce normal deste kartlarını oluştur
@@ -119,12 +120,6 @@ public class Deck : MonoBehaviour
             {
                 Debug.LogError("[Deck] CardSlot içinde Card bileşeni bulunamadı! Index: " + i);
             }
-        }
-        // Eğer lider kartı varsa, onu da oluştur (oyun mekanizmasına bağlı olarak)
-        if (leaderCard != null)
-        {
-            // Lider kartı için özel işlemler burada yapılabilir
-            // Örneğin: CreateLeaderCard(leaderCard);
         }
     }
     [PunRPC]
@@ -261,5 +256,46 @@ public class Deck : MonoBehaviour
             Transform slot = transform.GetChild(i);
             slot.SetAsLastSibling();
         }
+    }
+    // Kaydedilmiş desteyi yükle
+    private void LoadSavedDeck(int playerId)
+    {
+        // PlayerPrefs'ten desteyi al
+        if (PlayerPrefs.HasKey("PlayerDeck"))
+        {
+            string deckJson = PlayerPrefs.GetString("PlayerDeck");
+            DeckData deckData = JsonUtility.FromJson<DeckData>(deckJson);
+            // Kart istatistiklerini yükle
+            List<CardStats> deckCards = new List<CardStats>();
+            // Tüm kartları Resources klasöründen yükle
+            CardStats[] allCards = Resources.LoadAll<CardStats>("Cards");
+            // Deste kartlarını bul
+            foreach (string cardName in deckData.cardNames)
+            {
+                CardStats cardStats = System.Array.Find(allCards, c => c.name == cardName);
+                if (cardStats != null)
+                {
+                    deckCards.Add(cardStats);
+                }
+                else
+                {
+                    Debug.LogWarning($"[Deck] Kaydedilmiş destede bulunan kart bulunamadı: {cardName}");
+                }
+            }
+            GenerateDeckFromCards(playerId, deckCards);
+            Debug.Log($"[Deck] Kaydedilmiş deste yüklendi: {deckCards.Count} kart");
+        }
+        else
+        {
+            // Kaydedilmiş deste yoksa varsayılan desteyi oluştur
+            Debug.Log("[Deck] Kaydedilmiş deste bulunamadı. Varsayılan deste oluşturuluyor.");
+            GenerateDeck(playerId);
+        }
+    }
+    // DeckData sınıfını ekle (BuildDeck ile aynı yapıda olmalı)
+    [System.Serializable]
+    private class DeckData
+    {
+        public string[] cardNames;
     }
 }

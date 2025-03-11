@@ -9,7 +9,6 @@ public class CardBuildDeck : MonoBehaviour, IPointerClickHandler
     private BuildDeck buildDeck;
     private float doubleClickTime = 0.3f; // Çift tıklama için zaman aralığı
     private float lastClickTime = 0f;
-    private bool isLeaderCard = false; // Lider kartı mı?
     private bool isInPlayerDeck = false; // Kart oyuncu destesinde mi?
     private void Awake()
     {
@@ -66,30 +65,10 @@ public class CardBuildDeck : MonoBehaviour, IPointerClickHandler
     }
     private void Start()
     {
-        // Kartın lider kartı olup olmadığını kontrol et
-        if (cardStats != null)
-        {
-            // CardStatus.Leader yerine başka bir kontrol kullanabilirsiniz
-            // Örneğin: cardStats.isLeader veya cardStats.cardName içinde "Lider" geçiyorsa
-            isLeaderCard = IsLeaderCard(cardStats);
-        }
         // Kartın oyuncu destesinde olup olmadığını kontrol et
         if (buildDeck != null && cardStats != null)
         {
             isInPlayerDeck = buildDeck.GetPlayerDeck().Contains(cardStats);
-        }
-        // Eğer bu kart, seçili lider kartı ise özel bir görsel efekt ekle
-        if (isLeaderCard && buildDeck != null && buildDeck.GetSelectedLeader() == cardStats)
-        {
-            // Seçili lider kartı için özel bir görsel efekt ekle
-            // Örneğin: Outline bileşeni ekleyebilir veya renk değiştirebilirsiniz
-            Outline outline = GetComponent<Outline>();
-            if (outline == null)
-            {
-                outline = gameObject.AddComponent<Outline>();
-            }
-            outline.effectColor = Color.yellow;
-            outline.effectDistance = new Vector2(3, 3);
         }
     }
     // Tıklama olayını işle
@@ -215,6 +194,7 @@ public class CardBuildDeck : MonoBehaviour, IPointerClickHandler
             }
             // UI'ı güncelle
             buildDeck.UpdateUI();
+            buildDeck.SaveDeck();
         }
     }
     // Kartın destede olup olmadığını kontrol et
@@ -227,14 +207,6 @@ public class CardBuildDeck : MonoBehaviour, IPointerClickHandler
         }
         return false;
     }
-    // Kartın lider kartı olup olmadığını kontrol et
-    private bool IsLeaderCard(CardStats stats)
-    {
-        // Burada kendi lider kart kontrolünüzü yapabilirsiniz
-        // Örneğin: Kart adında "Lider" geçiyorsa veya özel bir tag'i varsa
-        return stats.name.Contains("Leader") || stats.name.Contains("Lider");
-    }
-    // Kartın oyuncu destesi içeriğinde olup olmadığını kontrol et
     private bool IsInPlayerDeckContent()
     {
         if (transform.parent == null)
@@ -279,8 +251,6 @@ public class CardBuildDeck : MonoBehaviour, IPointerClickHandler
         cardStats = stats;
         if (stats != null)
         {
-            isLeaderCard = IsLeaderCard(stats);
-            // Kartın oyuncu destesinde olup olmadığını kontrol et
             if (buildDeck != null)
             {
                 isInPlayerDeck = buildDeck.GetPlayerDeck().Contains(stats);

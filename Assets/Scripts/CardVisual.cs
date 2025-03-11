@@ -108,7 +108,6 @@ public class CardVisual : MonoBehaviour
                 cardTypeIcon.sprite = cardStats.agileSpriteIcon;
             }
         }
-        // Kart çerçevesini güncelle (Hero, Leader, Special kartlar için farklı çerçeve)
         if (cardFrame != null)
         {
             // Burada farklı kart tipleri için farklı çerçeveler kullanabilirsiniz

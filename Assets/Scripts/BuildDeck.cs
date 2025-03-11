@@ -21,7 +21,6 @@ public class BuildDeck : MonoBehaviourPunCallbacks
     private List<CardStats> allCards = new List<CardStats>(); // Tüm kartlar
     private List<CardStats> filteredCards = new List<CardStats>(); // Filtrelenmiş kartlar
     private List<CardStats> playerDeck = new List<CardStats>(); // Oyuncu destesi
-    private CardStats selectedLeader; // Seçilen lider kartı
     private string currentFaction = "Tümü"; // Şu anki seçili faction
     private CardType currentCardType = CardType.None; // Şu anki seçili kart tipi
     private string currentSearchText = ""; // Şu anki arama metni
@@ -67,24 +66,6 @@ public class BuildDeck : MonoBehaviourPunCallbacks
         CardStats[] cards = Resources.LoadAll<CardStats>("Cards");
         allCards.AddRange(cards);
         filteredCards = new List<CardStats>(allCards);
-        // Kart prefablarını oluştur ve CardBuildDeck bileşenlerini ayarla
-        if (cardPrefab != null)
-        {
-            // Prefab'da CardBuildDeck bileşeni olup olmadığını kontrol et
-            CardBuildDeck prefabCardBuildDeck = cardPrefab.GetComponent<CardBuildDeck>();
-            if (prefabCardBuildDeck == null)
-            {
-                Debug.LogWarning("[BuildDeck] Kart prefabında CardBuildDeck bileşeni bulunamadı. Kart prefabına CardBuildDeck bileşeni ekleniyor.");
-                prefabCardBuildDeck = cardPrefab.AddComponent<CardBuildDeck>();
-            }
-            // NOT: Prefab'a doğrudan CardStats atamak yerine, instantiate edildiğinde atanacak
-            Debug.Log("[BuildDeck] Kart prefabı kontrol edildi ve hazırlandı.");
-        }
-        else
-        {
-            Debug.LogError("[BuildDeck] Kart prefabı atanmamış! Lütfen Inspector'da cardPrefab değişkenine bir prefab atayın.");
-        }
-        // Kaydedilmiş desteyi yükle
         LoadDeckFromPlayerPrefs();
     }
     // Desteyi PlayerPrefs'ten yükle
@@ -110,13 +91,6 @@ public class BuildDeck : MonoBehaviourPunCallbacks
                     Debug.LogWarning($"[BuildDeck] Kaydedilmiş destede bulunan kart bulunamadı: {cardName}");
                 }
             }
-            // Lider kartını yükle
-            selectedLeader = allCards.Find(c => c.name == deckData.leaderCardName);
-            if (selectedLeader == null)
-            {
-                Debug.LogWarning($"[BuildDeck] Kaydedilmiş lider kartı bulunamadı: {deckData.leaderCardName}");
-            }
-            Debug.Log($"[BuildDeck] Deste başarıyla yüklendi: {playerDeck.Count} kart, Lider: {selectedLeader?.name ?? "Yok"}");
         }
         else
         {
@@ -129,28 +103,10 @@ public class BuildDeck : MonoBehaviourPunCallbacks
         if (deckUI != null)
         {
             // Sadece deste bilgilerini güncelle
-            deckUI.UpdateDeckInfo(playerDeck, maxDeckSize, minDeckSize, selectedLeader);
+            deckUI.UpdateDeckInfo(playerDeck, maxDeckSize, minDeckSize);
             // Lider kartı varsa güncelle
         }
     }
-    // Lider seçim panelini göster
-    public void ShowLeaderSelection()
-    {
-        // Lider kartlarını filtrele
-        List<CardStats> leaderCards = allCards.Where(c => c.cardStatue == CardStatus.Leader).ToList();
-        // UI'ı güncelle
-    }
-    // Lider kartı seç
-    public void SelectLeader(CardStats leaderCard)
-    {
-        selectedLeader = leaderCard;
-        // UI'ı güncelle
-        if (deckUI != null)
-        {
-            deckUI.UpdateDeckInfo(playerDeck, maxDeckSize, minDeckSize, selectedLeader);
-        }
-    }
-    // Desteye kart ekle
     public void AddCardToDeck(CardStats cardStats)
     {
         // Deste maksimum boyuta ulaştıysa ekleme
@@ -242,18 +198,8 @@ public class BuildDeck : MonoBehaviourPunCallbacks
             {
                 deckUI.ShowError($"Deste en az {minDeckSize} kart içermelidir!");
             }
-            return;
+            // return;
         }
-        // Lider seçilmemişse kaydetme
-        if (selectedLeader == null)
-        {
-            if (deckUI != null)
-            {
-                deckUI.ShowError("Lütfen bir lider kartı seçin!");
-            }
-            return;
-        }
-        // Desteyi kaydet
         SaveDeckToPlayerPrefs();
         // Başarı mesajı göster
         if (deckUI != null)
@@ -266,17 +212,14 @@ public class BuildDeck : MonoBehaviourPunCallbacks
     {
         // Kart ID'lerini bir listeye dönüştür
         List<string> deckCardNames = playerDeck.Select(c => c.name).ToList();
-        string leaderCardName = selectedLeader.name;
-        // JSON'a dönüştür
         string deckJson = JsonUtility.ToJson(new DeckData
         {
             cardNames = deckCardNames.ToArray(),
-            leaderCardName = leaderCardName
         });
         // PlayerPrefs'e kaydet
         PlayerPrefs.SetString("PlayerDeck", deckJson);
         PlayerPrefs.Save();
-        Debug.Log($"[BuildDeck] Deste başarıyla kaydedildi: {playerDeck.Count} kart, Lider: {selectedLeader.name}");
+        Debug.Log($"[BuildDeck] Deste başarıyla kaydedildi: {playerDeck.Count} kart,");
     }
     // Desteyi temizle
     public void ClearDeck()
@@ -300,7 +243,6 @@ public class BuildDeck : MonoBehaviourPunCallbacks
     // Getter metodları
     public List<CardStats> GetFilteredCards() => filteredCards;
     public List<CardStats> GetPlayerDeck() => playerDeck;
-    public CardStats GetSelectedLeader() => selectedLeader;
     public int GetMaxDeckSize() => maxDeckSize;
     public int GetMinDeckSize() => minDeckSize;
     public GameObject GetCardPrefab() => cardPrefab;
@@ -309,6 +251,5 @@ public class BuildDeck : MonoBehaviourPunCallbacks
     private class DeckData
     {
         public string[] cardNames;
-        public string leaderCardName;
     }
 }

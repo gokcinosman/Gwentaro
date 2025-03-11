@@ -39,11 +39,6 @@ public class CardStatsVisual : MonoBehaviour
             cardHeroValueSprite.gameObject.SetActive(false);
             cardNormalValueSprite.sprite = cardStats.specialSpriteIcon;
         }
-        else if (cardStats.cardStatue == CardStatus.Leader)
-        {
-            cardNormalValueSprite.gameObject.SetActive(false);
-            cardHeroValueSprite.gameObject.SetActive(false);
-        }
         else
         {
             cardNormalValueSprite.gameObject.SetActive(true);

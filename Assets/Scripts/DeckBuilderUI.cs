@@ -280,7 +280,7 @@ public class DeckBuilderUI : MonoBehaviour
         Debug.Log($"[DeckBuilderUI] Deste güncellendi: {playerDeck.Count} kart, ScrollRect yenilendi");
     }
     // Deste bilgilerini güncelle
-    public void UpdateDeckInfo(List<CardStats> playerDeck, int maxDeckSize, int minDeckSize, CardStats selectedLeader)
+    public void UpdateDeckInfo(List<CardStats> playerDeck, int maxDeckSize, int minDeckSize)
     {
         // Deste istatistiklerini hesapla
         int totalCards = playerDeck.Count;
@@ -300,7 +300,7 @@ public class DeckBuilderUI : MonoBehaviour
         // Kaydet butonunu güncelle
         if (saveButton != null)
         {
-            saveButton.interactable = totalCards >= minDeckSize && selectedLeader != null;
+            saveButton.interactable = totalCards >= minDeckSize;
         }
     }
     // Lider kartını güncelle
