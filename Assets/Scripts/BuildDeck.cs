@@ -53,11 +53,6 @@ public class BuildDeck : MonoBehaviourPunCallbacks
             {
                 deckUI.UpdatePlayerDeck(playerDeck, cardPrefab, RemoveCardFromDeck);
             }
-            // Lider kartını oluştur (eğer varsa)
-            if (selectedLeader != null)
-            {
-                deckUI.UpdateLeaderCard(selectedLeader, cardPrefab, ShowLeaderSelection);
-            }
         }
         else
         {
@@ -136,10 +131,6 @@ public class BuildDeck : MonoBehaviourPunCallbacks
             // Sadece deste bilgilerini güncelle
             deckUI.UpdateDeckInfo(playerDeck, maxDeckSize, minDeckSize, selectedLeader);
             // Lider kartı varsa güncelle
-            if (selectedLeader != null)
-            {
-                deckUI.UpdateLeaderCard(selectedLeader, cardPrefab, ShowLeaderSelection);
-            }
         }
     }
     // Lider seçim panelini göster
@@ -148,10 +139,6 @@ public class BuildDeck : MonoBehaviourPunCallbacks
         // Lider kartlarını filtrele
         List<CardStats> leaderCards = allCards.Where(c => c.cardStatue == CardStatus.Leader).ToList();
         // UI'ı güncelle
-        if (deckUI != null)
-        {
-            deckUI.ShowLeaderSelection(leaderCards, cardPrefab, SelectLeader);
-        }
     }
     // Lider kartı seç
     public void SelectLeader(CardStats leaderCard)
@@ -160,8 +147,6 @@ public class BuildDeck : MonoBehaviourPunCallbacks
         // UI'ı güncelle
         if (deckUI != null)
         {
-            deckUI.HideLeaderSelection();
-            deckUI.UpdateLeaderCard(selectedLeader, cardPrefab, ShowLeaderSelection);
             deckUI.UpdateDeckInfo(playerDeck, maxDeckSize, minDeckSize, selectedLeader);
         }
     }

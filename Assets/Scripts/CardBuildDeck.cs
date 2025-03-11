@@ -110,32 +110,10 @@ public class CardBuildDeck : MonoBehaviour, IPointerClickHandler
             // Kartın hangi tarafta olduğunu kontrol et
             bool isInDeck = IsInPlayerDeckContent();
             bool isInCollection = IsInCardCollectionContent();
-            bool isInLeaderSelection = IsInLeaderSelectionContent();
-            bool isInLeaderHolder = IsInLeaderCardHolder();
-            // Debug bilgisi ekle
-            Debug.Log($"[CardBuildDeck] Konum kontrolleri: isInDeck={isInDeck}, isInCollection={isInCollection}, isInLeaderSelection={isInLeaderSelection}, isInLeaderHolder={isInLeaderHolder}");
-            // DeckBuilderUI referansını al
             DeckBuilderUI deckUI = FindObjectOfType<DeckBuilderUI>();
             if (deckUI == null)
             {
                 Debug.LogError("[CardBuildDeck] DeckBuilderUI referansı bulunamadı!");
-                return;
-            }
-            // Eğer bu bir lider kartı ise ve lider seçim panelindeyse
-            if (isLeaderCard && isInLeaderSelection)
-            {
-                Debug.Log($"[CardBuildDeck] Lider kartı seçiliyor: {cardStats.name}");
-                // Lider kartını seç
-                buildDeck.SelectLeader(cardStats);
-                return;
-            }
-            // Eğer bu bir lider kartı ise ve lider kart tutucusundaysa
-            if (isLeaderCard && isInLeaderHolder)
-            {
-                Debug.Log($"[CardBuildDeck] Lider seçim paneli açılıyor");
-                // Lider seçim panelini göster
-                deckUI.HideLeaderSelection();
-                buildDeck.ShowLeaderSelection();
                 return;
             }
             // Eğer kart oyuncu destesindeyse, koleksiyona taşı
@@ -294,44 +272,7 @@ public class CardBuildDeck : MonoBehaviour, IPointerClickHandler
         }
         return exactMatch;
     }
-    // Kartın lider seçim panelinde olup olmadığını kontrol et
-    private bool IsInLeaderSelectionContent()
-    {
-        if (transform.parent == null)
-            return false;
-        // DeckBuilderUI'daki leaderSelectionContent referansını bul
-        DeckBuilderUI deckUI = FindObjectOfType<DeckBuilderUI>();
-        if (deckUI == null)
-            return false;
-        // Transform'un parent'ı leaderSelectionContent mi kontrol et
-        bool exactMatch = transform.parent == deckUI.leaderSelectionContent;
-        // Eğer tam eşleşme yoksa, parent'ın ismini kontrol et
-        if (!exactMatch)
-        {
-            string parentName = transform.parent.name.ToLower();
-            return parentName.Contains("leader") || parentName.Contains("lider") || parentName.Contains("selection");
-        }
-        return exactMatch;
-    }
     // Kartın lider kart tutucusunda olup olmadığını kontrol et
-    private bool IsInLeaderCardHolder()
-    {
-        if (transform.parent == null)
-            return false;
-        // DeckBuilderUI'daki leaderCardHolder referansını bul
-        DeckBuilderUI deckUI = FindObjectOfType<DeckBuilderUI>();
-        if (deckUI == null)
-            return false;
-        // Transform'un parent'ı leaderCardHolder mi kontrol et
-        bool exactMatch = transform.parent == deckUI.leaderCardHolder;
-        // Eğer tam eşleşme yoksa, parent'ın ismini kontrol et
-        if (!exactMatch)
-        {
-            string parentName = transform.parent.name.ToLower();
-            return parentName.Contains("leader") || parentName.Contains("lider") || parentName.Contains("holder");
-        }
-        return exactMatch;
-    }
     // CardStats'ı dışarıdan ayarlamak için
     public void SetCardStats(CardStats stats)
     {

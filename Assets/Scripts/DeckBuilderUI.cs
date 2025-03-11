@@ -17,11 +17,7 @@ public class DeckBuilderUI : MonoBehaviour
     [SerializeField] private GameObject playerDeckPanel;
     [SerializeField] public Transform playerDeckContent;
     [SerializeField] private TextMeshProUGUI deckInfoText;
-    [Header("Lider Kartı")]
-    [SerializeField] private GameObject leaderCardPanel;
-    [SerializeField] public Transform leaderCardHolder;
-    [SerializeField] private GameObject leaderSelectionPanel;
-    [SerializeField] public Transform leaderSelectionContent;
+    [SerializeField] private ScrollRect playerDeckScrollRect;
     [Header("Filtreler")]
     [SerializeField] private TMP_Dropdown factionDropdown;
     [SerializeField] private TMP_Dropdown cardTypeDropdown;
@@ -37,7 +33,6 @@ public class DeckBuilderUI : MonoBehaviour
     private BuildDeck buildDeck;
     private ContentSizeFitter cardCollectionContentSizeFitter;
     private ContentSizeFitter playerDeckContentSizeFitter;
-    private ContentSizeFitter leaderSelectionContentSizeFitter;
     private void Awake()
     {
         buildDeck = GetComponent<BuildDeck>();
@@ -48,7 +43,6 @@ public class DeckBuilderUI : MonoBehaviour
         // ContentSizeFitter bileşenlerini al
         cardCollectionContentSizeFitter = cardCollectionContent?.GetComponent<ContentSizeFitter>();
         playerDeckContentSizeFitter = playerDeckContent?.GetComponent<ContentSizeFitter>();
-        //  leaderSelectionContentSizeFitter = leaderSelectionContent?.GetComponent<ContentSizeFitter>();
     }
     private void Start()
     {
@@ -84,11 +78,6 @@ public class DeckBuilderUI : MonoBehaviour
         if (searchInputField != null)
         {
             searchInputField.onValueChanged.AddListener(OnSearchTextChanged);
-        }
-        // Lider seçim panelini başlangıçta gizle
-        if (leaderSelectionPanel != null)
-        {
-            leaderSelectionPanel.SetActive(false);
         }
     }
     private void OnSearchTextChanged(string searchText)
@@ -127,20 +116,30 @@ public class DeckBuilderUI : MonoBehaviour
             playerDeckContentSizeFitter.enabled = false;
             playerDeckContentSizeFitter.enabled = true;
         }
-        if (leaderSelectionContentSizeFitter != null)
-        {
-            leaderSelectionContentSizeFitter.enabled = false;
-            leaderSelectionContentSizeFitter.enabled = true;
-        }
         // Bir kare daha bekle
         yield return null;
         // İçerik boyutlarını kartlara göre ayarla
         AdjustContentSize(cardCollectionContent, cardCollectionScrollRect);
-        AdjustContentSize(playerDeckContent, playerDeckPanel.GetComponent<ScrollRect>());
-        //if (leaderSelectionPanel.activeSelf)
-        // {
-        //    AdjustContentSize(leaderSelectionContent, leaderSelectionPanel.GetComponent<ScrollRect>());
-        //}
+        // Player deck için ScrollRect bileşenini kullan
+        if (playerDeckScrollRect == null)
+        {
+            // Eğer atanmamışsa, bileşeni bulmaya çalış
+            playerDeckScrollRect = playerDeckPanel.GetComponent<ScrollRect>();
+            if (playerDeckScrollRect == null)
+            {
+                // Eğer panelde yoksa, içerik üst öğesinde ara
+                playerDeckScrollRect = playerDeckContent.parent.GetComponent<ScrollRect>();
+            }
+        }
+        if (playerDeckScrollRect != null)
+        {
+            AdjustContentSize(playerDeckContent, playerDeckScrollRect);
+            Debug.Log($"[DeckBuilderUI] Deste ScrollRect ayarlandı: İçerik yüksekliği = {playerDeckContent.GetComponent<RectTransform>().sizeDelta.y}");
+        }
+        else
+        {
+            Debug.LogError("[DeckBuilderUI] Deste için ScrollRect bulunamadı!");
+        }
         // Canvas'ı tekrar güncelle
         Canvas.ForceUpdateCanvases();
     }
@@ -277,6 +276,8 @@ public class DeckBuilderUI : MonoBehaviour
         }
         // ScrollRect'i yeniden ayarla
         RefreshScrollRects();
+        // Debug bilgisi ekle
+        Debug.Log($"[DeckBuilderUI] Deste güncellendi: {playerDeck.Count} kart, ScrollRect yenilendi");
     }
     // Deste bilgilerini güncelle
     public void UpdateDeckInfo(List<CardStats> playerDeck, int maxDeckSize, int minDeckSize, CardStats selectedLeader)
@@ -303,87 +304,6 @@ public class DeckBuilderUI : MonoBehaviour
         }
     }
     // Lider kartını güncelle
-    public void UpdateLeaderCard(CardStats leaderCard, GameObject cardPrefab, Action onLeaderClicked)
-    {
-        // Önce mevcut lider kartını temizle
-        foreach (Transform child in leaderCardHolder)
-        {
-            Destroy(child.gameObject);
-        }
-        // Lider kartını göster
-        if (leaderCard != null)
-        {
-            // Kart prefabını oluştur
-            GameObject cardObj = Instantiate(cardPrefab, leaderCardHolder);
-            // Kart adını ayarla (CardBuildDeck'in kart adına göre eşleştirme yapabilmesi için)
-            cardObj.name = leaderCard.name;
-            // Karta tıklama olayını ekle
-            Button cardButton = cardObj.GetComponent<Button>();
-            if (cardButton != null)
-            {
-                cardButton.onClick.AddListener(() => onLeaderClicked());
-            }
-            // CardBuildDeck bileşenini ekle (eğer yoksa)
-            CardBuildDeck cardBuildDeck = cardObj.GetComponent<CardBuildDeck>();
-            if (cardBuildDeck == null)
-            {
-                cardBuildDeck = cardObj.AddComponent<CardBuildDeck>();
-            }
-            // CardStats referansını doğrudan ayarla
-            cardBuildDeck.SetCardStats(leaderCard);
-            // Debug bilgisi
-            Debug.Log($"[DeckBuilderUI] Lider kartı oluşturuldu: {leaderCard.name}, CardBuildDeck atandı: {cardBuildDeck != null}");
-        }
-    }
-    // Lider seçim panelini göster
-    public void ShowLeaderSelection(List<CardStats> leaderCards, GameObject cardPrefab, Action<CardStats> onLeaderSelected)
-    {
-        // Lider seçim panelini göster
-        if (leaderSelectionPanel != null)
-        {
-            leaderSelectionPanel.SetActive(true);
-        }
-        // Önce mevcut liderleri temizle
-        foreach (Transform child in leaderSelectionContent)
-        {
-            Destroy(child.gameObject);
-        }
-        // Lider kartlarını göster
-        foreach (CardStats leaderCard in leaderCards)
-        {
-            // Kart prefabını oluştur
-            GameObject cardObj = Instantiate(cardPrefab, leaderSelectionContent);
-            // Kart adını ayarla (CardBuildDeck'in kart adına göre eşleştirme yapabilmesi için)
-            cardObj.name = leaderCard.name;
-            // Karta tıklama olayını ekle
-            Button cardButton = cardObj.GetComponent<Button>();
-            if (cardButton != null)
-            {
-                cardButton.onClick.AddListener(() => onLeaderSelected(leaderCard));
-            }
-            // CardBuildDeck bileşenini ekle (eğer yoksa)
-            CardBuildDeck cardBuildDeck = cardObj.GetComponent<CardBuildDeck>();
-            if (cardBuildDeck == null)
-            {
-                cardBuildDeck = cardObj.AddComponent<CardBuildDeck>();
-            }
-            // CardStats referansını doğrudan ayarla
-            cardBuildDeck.SetCardStats(leaderCard);
-            // Debug bilgisi
-            Debug.Log($"[DeckBuilderUI] Lider seçim kartı oluşturuldu: {leaderCard.name}, CardBuildDeck atandı: {cardBuildDeck != null}");
-        }
-        // ScrollRect'i yeniden ayarla
-        RefreshScrollRects();
-    }
-    // Lider seçim panelini gizle
-    public void HideLeaderSelection()
-    {
-        if (leaderSelectionPanel != null)
-        {
-            leaderSelectionPanel.SetActive(false);
-        }
-    }
-    // Hata mesajını göster
     public void ShowError(string message, bool isError = true)
     {
         if (errorText != null)
