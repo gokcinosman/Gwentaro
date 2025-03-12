@@ -182,11 +182,16 @@ public class BuildDeck : MonoBehaviourPunCallbacks
         }
         // Lider kartlarını koleksiyonda gösterme
         filteredCards = filteredCards.Where(c => c.cardStatue != CardStatus.Leader).ToList();
+        filteredCards = filteredCards.Where(c => DeckContainsCard(c) == false).ToList();
         // Koleksiyon kartlarını güncelle
         if (deckUI != null)
         {
             deckUI.UpdateCardCollection(filteredCards, cardPrefab, AddCardToDeck);
         }
+    }
+    private bool DeckContainsCard(CardStats cardStats)
+    {
+        return playerDeck.Contains(cardStats);
     }
     // Desteyi kaydet
     public void SaveDeck()
