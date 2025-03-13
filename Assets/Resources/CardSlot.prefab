@@ -666,7 +666,7 @@ MonoBehaviour:
   selectionOffset: 50
   selected: 0
   isPlaced: 0
-  cardStats: {fileID: 11400000, guid: d24e9c82fa04d195b916046ef2ea934f, type: 2}
+  cardStats: {fileID: 0}
 --- !u!114 &2701790370959320597
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -745,6 +745,8 @@ MonoBehaviour:
   cardValueText: {fileID: 8942570371961236886}
   cardNameText: {fileID: 0}
   cardDescText: {fileID: 0}
+  cardBuildDeck: {fileID: 0}
+  card: {fileID: 3045210691087896000}
 --- !u!1 &8015673029264073810
 GameObject:
   m_ObjectHideFlags: 0

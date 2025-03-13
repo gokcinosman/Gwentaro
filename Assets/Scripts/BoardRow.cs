@@ -11,57 +11,52 @@ public class BoardRow : MonoBehaviour
     public CardType rowType;
     public List<Card> cards = new List<Card>();
     public int RowIndex;
-
-    public bool AddCard(Card card, int playerId)
+    private void Awake()
     {
-        if (GameManager.Instance.CurrentTurnPlayer != playerId)
+        // cards listesini başlat
+        if (cards == null)
         {
-            Debug.LogWarning($"[AddCard] Oyuncu {playerId} sırası değilken kart oynayamaz!");
-            return false;
+            cards = new List<Card>();
         }
-
-        if (playerId != ownerPlayerId)
+    }
+    public void AddCard(Card card, int playerId)
+    {
+        // Detaylı hata ayıklama bilgisi
+        Debug.Log($"[BoardRow] AddCard çağrıldı: card={card?.name ?? "null"}, playerId={playerId}");
+        // Null kontrolü
+        if (card == null)
         {
-            Debug.LogError($"[AddCard] HATA: Oyuncu {playerId}, kendisine ait olmayan bir satıra kart eklemeye çalıştı!");
-            return false;
+            Debug.LogError("[BoardRow] AddCard metoduna null kart gönderildi!");
+            return;
         }
-
-        if (cards.Contains(card))
+        // cards listesi kontrolü
+        if (cards == null)
         {
-            Debug.LogError("[AddCard] HATA: Kart zaten bu satırda mevcut!");
-            return false;
+            // cards listesi null ise başlat
+            cards = new List<Card>();
+            Debug.Log("[BoardRow] cards listesi başlatıldı.");
         }
-
-        if (rowType != card.cardStats.cardType)
-        {
-            return false;
-        }
-
-        // Kartı ekle
+        // Kartı listeye ekle
         cards.Add(card);
+        // Kartı yerleştir
         card.GetComponent<Selectable>().enabled = false;
         card.RemoveFromDeck();
         card.transform.SetParent(transform);
-
         RearrangeCards();
         UpdateRowValue(GetTotalPower());
-        return true;
+        Debug.Log($"[BoardRow] Kart başarıyla eklendi: {card.name}");
     }
-
-
     private void RearrangeCards()
     {
         if (cards.Count == 0 || this == null) return;
         float cardWidth = cards[0].GetComponent<RectTransform>().rect.width;
         float rowWidth = GetComponent<RectTransform>().rect.width;
         float startX = -((cards.Count - 1) * cardWidth) / 2f;
-
         for (int i = 0; i < cards.Count; i++)
         {
             if (cards[i] == null) continue;
             float xPos = startX + (i * cardWidth);
             Vector3 targetPos = new Vector3(xPos, 0, -i * 0.1f);
-
             // Capture the card reference locally
             var card = cards[i];
             card.transform.DOLocalMove(targetPos, 0.3f)
@@ -71,17 +66,25 @@ public class BoardRow : MonoBehaviour
     }
     public int GetTotalPower()
     {
-        int totalPower = 0;
-        foreach (var card in cards)
+        // Null kontrolü
+        if (cards == null)
         {
-            totalPower += card.cardStats.cardValue;
+            Debug.LogWarning("[BoardRow] GetTotalPower: cards null!");
+            return 0;
+        }
+        int totalPower = 0;
+        // Tüm kartların gücünü topla
+        foreach (Card card in cards)
+        {
+            if (card != null && card.cardStats != null)
+            {
+                totalPower += card.cardStats.cardValue;
+            }
         }
         return totalPower;
     }
-
     #region Observer Pattern
     private List<IObserver> observers = new List<IObserver>();
-
     public void AddObserver(IObserver observer)
     {
         if (!observers.Contains(observer))
@@ -91,7 +94,6 @@ public class BoardRow : MonoBehaviour
             observer.OnNotify(rowScore.ToString(), this);
         }
     }
-
     public void RemoveObserver(IObserver observer)
     {
         if (observers.Contains(observer))
@@ -99,7 +101,6 @@ public class BoardRow : MonoBehaviour
             observers.Remove(observer);
         }
     }
-
     public void NotifyObservers(string message)
     {
         foreach (var observer in observers)
@@ -108,10 +109,8 @@ public class BoardRow : MonoBehaviour
             {
                 observer.OnNotify(message, this);
             }
-
         }
     }
-
     public void UpdateRowValue(int newValue)
     {
         if (rowScore != newValue)

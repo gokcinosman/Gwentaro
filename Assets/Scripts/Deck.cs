@@ -18,22 +18,17 @@ public class Deck : MonoBehaviour
     public int ownerPlayerId;
     void Start()
     {
-        if (PhotonNetwork.IsMasterClient)
+        int localPlayerId = PhotonNetwork.LocalPlayer.ActorNumber - 1;
+        if (ownerPlayerId == localPlayerId)
         {
-            // Kaydedilmiş desteyi yükle
-            LoadSavedDeck(ownerPlayerId);
+            LoadSavedDeck(localPlayerId);
+            StartCoroutine(Frame());
         }
         else
         {
             StartCoroutine(WaitForCards());
         }
         SetDeckVisibility();
-        int localPlayerId = PhotonNetwork.LocalPlayer.ActorNumber - 1;
-        // Sadece kendi destesi için Frame() çalıştır
-        if (ownerPlayerId == localPlayerId)
-        {
-            StartCoroutine(Frame());
-        }
     }
     void SetDeckVisibility()
     {
@@ -96,6 +91,8 @@ public class Deck : MonoBehaviour
             if (slotPhotonView != null)
             {
                 photonView.RPC("SetCardSlotParent", RpcTarget.AllBuffered, slotPhotonView.ViewID);
+                // Kart verilerini senkronize et
+                photonView.RPC("SyncCardStats", RpcTarget.AllBuffered, slotPhotonView.ViewID, deckCards[i].name);
             }
             else
             {
@@ -104,12 +101,13 @@ public class Deck : MonoBehaviour
             Card cardComponent = newCardSlot.GetComponentInChildren<Card>();
             if (cardComponent != null)
             {
-                // Kart bilgilerini ayarla
+                // Kart bilgilerini ayarla (yerel olarak)
                 cardComponent.cardStats = deckCards[i];
                 // Kart görselini güncelle
-                if (cardComponent.cardVisual != null)
+                CardStatsVisual cardVisual = cardComponent.GetComponent<CardStatsVisual>();
+                if (cardVisual != null)
                 {
-                    cardComponent.cardVisual.UpdateVisual(deckCards[i]);
+                    cardVisual.UpdateVisual(deckCards[i]);
                 }
                 cards.Add(cardComponent);
                 cardComponent.BeginDragEvent.AddListener(BeginDrag);
@@ -135,14 +133,51 @@ public class Deck : MonoBehaviour
             Debug.LogError("[Deck] SetCardSlotParent başarısız! ViewID: " + slotViewID);
         }
     }
+    [PunRPC]
+    void SyncCardStats(int cardViewID, string cardStatsName)
+    {
+        Debug.Log($"[Deck] SyncCardStats çağrıldı: cardViewID={cardViewID}, cardStatsName={cardStatsName}");
+        // Kart nesnesini bul
+        PhotonView cardView = PhotonView.Find(cardViewID);
+        if (cardView == null)
+        {
+            Debug.LogError($"[Deck] cardViewID={cardViewID} için PhotonView bulunamadı!");
+            return;
+        }
+        Card card = cardView.GetComponent<Card>();
+        if (card == null)
+        {
+            Debug.LogError($"[Deck] cardViewID={cardViewID} için Card bileşeni bulunamadı!");
+            return;
+        }
+        // CardStats'ı yükle
+        CardStats cardStats = Resources.Load<CardStats>($"Cards/{cardStatsName}");
+        if (cardStats == null)
+        {
+            Debug.LogError($"[Deck] CardStats bulunamadı: {cardStatsName}");
+            return;
+        }
+        // Kart verilerini ayarla
+        card.cardStats = cardStats;
+        // Kart görselini güncelle
+        CardStatsVisual cardVisual = card.GetComponent<CardStatsVisual>();
+        if (cardVisual != null)
+        {
+            cardVisual.UpdateVisual(cardStats);
+        }
+        Debug.Log($"[Deck] Kart senkronize edildi: {cardStatsName}");
+    }
     IEnumerator WaitForCards()
     {
         yield return new WaitForSeconds(1f);
-        cards = FindObjectsOfType<Card>().ToList();
+        cards = FindObjectsOfType<Card>().Where(c => c != null).ToList();
         foreach (Card card in cards)
         {
-            card.BeginDragEvent.AddListener(BeginDrag);
-            card.EndDragEvent.AddListener(EndDrag);
+            if (card != null)
+            {
+                card.BeginDragEvent.AddListener(BeginDrag);
+                card.EndDragEvent.AddListener(EndDrag);
+            }
         }
     }
     private void BeginDrag(Card card)
@@ -223,10 +258,16 @@ public class Deck : MonoBehaviour
     IEnumerator Frame()
     {
         yield return new WaitForEndOfFrame();
-        foreach (Card card in cards)
+        if (cards != null && cards.Count > 0)
         {
-            card.transform.localPosition = Vector3.zero;
-            card.cardVisual?.UpdateIndex(cards.Count);
+            foreach (Card card in cards.Where(c => c != null))
+            {
+                card.transform.localPosition = Vector3.zero;
+                if (card.cardVisual != null)
+                {
+                    card.cardVisual.UpdateIndex(cards.Count);
+                }
+            }
         }
     }
     public void RemoveCard(Card card)

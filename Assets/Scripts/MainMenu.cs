@@ -8,6 +8,7 @@ using Photon.Realtime;
 using UnityEngine.SceneManagement;
 public class MainMenu : MonoBehaviourPunCallbacks
 {
+    public static MainMenu Instance;
     [Header("Ana Menü Panelleri")]
     [SerializeField] private GameObject mainMenuPanel;
     [SerializeField] private GameObject lobbyPanel;
@@ -23,7 +24,6 @@ public class MainMenu : MonoBehaviourPunCallbacks
     [SerializeField] private Button joinRoomButton;
     [SerializeField] private Button backFromLobbyButton;
     [SerializeField] private Text roomNameInput;
-    [SerializeField] private TMP_InputField playerNameInput;
     [Header("Deste Oluşturma Paneli")]
     [SerializeField] private DeckBuilderUI deckBuilderUI;
     [SerializeField] private Button backFromDeckBuilderButton;
@@ -31,22 +31,36 @@ public class MainMenu : MonoBehaviourPunCallbacks
     [SerializeField] private Button backFromOptionsButton;
     [Header("Durum Metinleri")]
     [SerializeField] private TextMeshProUGUI statusText;
+    [Header("Bağlantı Panelleri")]
+    [SerializeField] GameObject connectionPanel;
+    [SerializeField] GameObject inGamePanel;
     private void Awake()
     {
+        // Singleton pattern'i ekle
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
         // Butonları ayarla
         SetupButtons();
         // Başlangıçta sadece ana menü panelini göster
         ShowMainMenuPanel();
     }
+    private bool isLoadingLevel;
+    public void OnLevelWasLoaded(int level)
+    {
+        isLoadingLevel = false;
+    }
     private void Start()
     {
-        // Photon sunucusuna bağlan
-        ConnectToPhoton();
-        // Oyuncu adını PlayerPrefs'ten yükle
-        if (PlayerPrefs.HasKey("PlayerName"))
-        {
-            playerNameInput.text = PlayerPrefs.GetString("PlayerName");
-        }
+        // Başlangıçta butonları devre dışı bırak
+        createRoomButton.interactable = false;
+        joinRoomButton.interactable = false;
+        // Sunucuya bağlan
+        PhotonNetwork.ConnectUsingSettings();
     }
     private void SetupButtons()
     {
@@ -96,6 +110,13 @@ public class MainMenu : MonoBehaviourPunCallbacks
             deckBuilderUI.OpenDeckBuilder();
         }
     }
+    public void ShowLobbyUI()
+    {
+        connectionPanel.SetActive(false);
+        lobbyPanel.SetActive(true);
+        inGamePanel.SetActive(false);
+        UpdateStatus("Lobiye bağlandı");
+    }
     private void ShowOptionsPanel()
     {
         mainMenuPanel.SetActive(false);
@@ -123,21 +144,11 @@ public class MainMenu : MonoBehaviourPunCallbacks
     }
     private void OnCreateRoomButtonClicked()
     {
-        if (string.IsNullOrEmpty(roomNameInput.text))
+        if (!PhotonNetwork.IsConnectedAndReady)
         {
-            statusText.text = "Lütfen bir oda adı girin!";
+            Debug.LogWarning("Sunucuya bağlantı henüz hazır değil. Lütfen bekleyin.");
             return;
         }
-        if (string.IsNullOrEmpty(playerNameInput.text))
-        {
-            statusText.text = "Lütfen bir oyuncu adı girin!";
-            return;
-        }
-        // Oyuncu adını kaydet
-        PhotonNetwork.NickName = playerNameInput.text;
-        PlayerPrefs.SetString("PlayerName", playerNameInput.text);
-        PlayerPrefs.Save();
-        // Oda oluştur
         RoomOptions roomOptions = new RoomOptions
         {
             MaxPlayers = 2,
@@ -145,27 +156,15 @@ public class MainMenu : MonoBehaviourPunCallbacks
             IsOpen = true
         };
         PhotonNetwork.CreateRoom(roomNameInput.text, roomOptions);
-        statusText.text = "Oda oluşturuluyor...";
     }
     private void OnJoinRoomButtonClicked()
     {
-        if (string.IsNullOrEmpty(roomNameInput.text))
+        if (!PhotonNetwork.IsConnectedAndReady)
         {
-            statusText.text = "Lütfen bir oda adı girin!";
+            Debug.LogWarning("Sunucuya bağlantı henüz hazır değil. Lütfen bekleyin.");
             return;
         }
-        if (string.IsNullOrEmpty(playerNameInput.text))
-        {
-            statusText.text = "Lütfen bir oyuncu adı girin!";
-            return;
-        }
-        // Oyuncu adını kaydet
-        PhotonNetwork.NickName = playerNameInput.text;
-        PlayerPrefs.SetString("PlayerName", playerNameInput.text);
-        PlayerPrefs.Save();
-        // Odaya katıl
         PhotonNetwork.JoinRoom(roomNameInput.text);
-        statusText.text = "Odaya katılınıyor...";
     }
     private void OnBackFromLobbyButtonClicked()
     {
@@ -188,6 +187,10 @@ public class MainMenu : MonoBehaviourPunCallbacks
     #region Photon Callbacks
     public override void OnConnectedToMaster()
     {
+        Debug.Log("Master sunucuya bağlanıldı!");
+        // Butonları aktif hale getir
+        createRoomButton.interactable = true;
+        joinRoomButton.interactable = true;
         statusText.text = "Sunucuya bağlandı!";
         PhotonNetwork.AutomaticallySyncScene = true;
     }
@@ -202,13 +205,15 @@ public class MainMenu : MonoBehaviourPunCallbacks
     }
     public override void OnCreateRoomFailed(short returnCode, string message)
     {
+        Debug.LogError($"Oda oluşturma başarısız: {message}");
         statusText.text = $"Oda oluşturma başarısız: {message}";
     }
     public override void OnJoinedRoom()
     {
+        Debug.Log($"Odaya katılındı: {PhotonNetwork.CurrentRoom.Name}");
         statusText.text = "Odaya katıldı!";
-        // Eğer oda dolu ise oyunu başlat
-        if (PhotonNetwork.CurrentRoom.PlayerCount == 2)
+        // Eğer oda dolu ise ve sahne henüz yüklenmiyorsa oyunu başlat
+        if (PhotonNetwork.CurrentRoom.PlayerCount == 2 && !isLoadingLevel)
         {
             if (PhotonNetwork.IsMasterClient)
             {
@@ -222,24 +227,47 @@ public class MainMenu : MonoBehaviourPunCallbacks
     }
     public override void OnJoinRoomFailed(short returnCode, string message)
     {
+        Debug.LogError($"Odaya katılma başarısız: {message}");
         statusText.text = $"Odaya katılma başarısız: {message}";
-    }
-    public override void OnPlayerEnteredRoom(Player newPlayer)
-    {
-        statusText.text = $"{newPlayer.NickName} odaya katıldı!";
-        // Eğer oda dolu ise oyunu başlat
-        if (PhotonNetwork.CurrentRoom.PlayerCount == 2)
-        {
-            if (PhotonNetwork.IsMasterClient)
-            {
-                LoadGameScene();
-            }
-        }
     }
     #endregion
     private void LoadGameScene()
     {
-        // Oyun sahnesini yükle
+        if (PhotonNetwork.IsMasterClient && !isLoadingLevel)
+        {
+            // Sahne yükleme durumunu işaretle
+            isLoadingLevel = true;
+            // Tüm oyuncular için sahneyi yükle
+            PhotonNetwork.CurrentRoom.IsOpen = false;
+            PhotonNetwork.CurrentRoom.IsVisible = false;
+            // Gecikmeli yükleme için
+            StartCoroutine(DelayedLoadLevel());
+        }
+    }
+    private IEnumerator DelayedLoadLevel()
+    {
+        // Kısa bir gecikme ekleyin
+        yield return new WaitForSeconds(0.2f);
         PhotonNetwork.LoadLevel("CardScene");
+    }
+    // UIController'dan taşınan metodlar
+    public void ShowConnectionUI()
+    {
+        connectionPanel.SetActive(true);
+        lobbyPanel.SetActive(false);
+        inGamePanel.SetActive(false);
+    }
+    public void ShowInGameUI()
+    {
+        connectionPanel.SetActive(false);
+        lobbyPanel.SetActive(false);
+        inGamePanel.SetActive(true);
+    }
+    public void UpdateStatus(string message)
+    {
+        if (statusText != null)
+        {
+            statusText.text = message;
+        }
     }
 }

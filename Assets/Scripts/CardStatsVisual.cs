@@ -15,16 +15,30 @@ public class CardStatsVisual : MonoBehaviour
     public TextMeshProUGUI cardNameText;
     public TextMeshProUGUI cardDescText;
     public CardBuildDeck cardBuildDeck;
+    public Card card;
     private void Awake()
     {
-        cardStats = cardBuildDeck.cardStats;
-        SetCardSprite();
-        SetCardName();
-        SetCardDescription();
-        SetCardClassSprite();
-        SetCardTypeSprite();
-        SetValueText();
-        SetValueSprite();
+        // Önce card referansını kontrol et
+        if (card != null && card.cardStats != null)
+        {
+            cardStats = card.cardStats;
+        }
+        // Eğer cardBuildDeck varsa ve cardStats hala null ise
+        else if (cardBuildDeck != null && cardBuildDeck.cardStats != null)
+        {
+            cardStats = cardBuildDeck.cardStats;
+            SetCardName();
+            SetCardDescription();
+        }
+        // CardStats varsa görsel öğeleri ayarla
+        if (cardStats != null)
+        {
+            SetCardSprite();
+            SetCardClassSprite();
+            SetCardTypeSprite();
+            SetValueText();
+            SetValueSprite();
+        }
     }
     private void SetValueSprite()
     {
@@ -128,6 +142,26 @@ public class CardStatsVisual : MonoBehaviour
     }
     private void SetCardSprite()
     {
+        Debug.Log("Card Sprite: " + cardStats.cardSprite);
+        Debug.Log("Own sprite: " + cartSprite.sprite);
         cartSprite.sprite = cardStats.cardSprite;
+    }
+    // Kartı güncellemek için yeni bir metot ekleyelim
+    public void UpdateVisual(CardStats newCardStats)
+    {
+        if (newCardStats != null)
+        {
+            cardStats = newCardStats;
+            SetCardSprite();
+            SetCardClassSprite();
+            SetCardTypeSprite();
+            SetValueText();
+            SetValueSprite();
+            if (cardBuildDeck != null)
+            {
+                SetCardName();
+                SetCardDescription();
+            }
+        }
     }
 }

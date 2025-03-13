@@ -302,17 +302,57 @@ public class GameManager : MonoBehaviourPun
     [PunRPC]
     void PlayCardRPC(int playerId, int cardViewID, int rowIndex)
     {
-        BoardRow targetRow = boardRows[rowIndex];
-        Card card = PhotonView.Find(cardViewID)?.GetComponent<Card>();
-        if (card == null) return;
-        bool success = targetRow.AddCard(card, playerId);
-        if (success)
+        Debug.Log($"[GameManager] PlayCardRPC çağrıldı: playerId={playerId}, cardViewID={cardViewID}, rowIndex={rowIndex}");
+        try
         {
+            // Kart nesnesini bul
+            PhotonView cardView = PhotonView.Find(cardViewID);
+            if (cardView == null)
+            {
+                Debug.LogError($"[GameManager] cardViewID={cardViewID} için PhotonView bulunamadı!");
+                return;
+            }
+            Card card = cardView.GetComponent<Card>();
+            if (card == null)
+            {
+                Debug.LogError($"[GameManager] cardViewID={cardViewID} için Card bileşeni bulunamadı!");
+                return;
+            }
+            // Kart verilerini kontrol et
+            if (card.cardStats == null)
+            {
+                Debug.LogError($"[GameManager] cardViewID={cardViewID} için cardStats null!");
+                return;
+            }
+            // BoardRow kontrolü
+            if (boardRows == null)
+            {
+                Debug.LogError("[GameManager] boardRows null!");
+                return;
+            }
+            if (rowIndex < 0 || rowIndex >= boardRows.Length)
+            {
+                Debug.LogError($"[GameManager] Geçersiz rowIndex: {rowIndex}, boardRows.Length={boardRows.Length}");
+                return;
+            }
+            BoardRow targetRow = boardRows[rowIndex];
+            if (targetRow == null)
+            {
+                Debug.LogError($"[GameManager] rowIndex={rowIndex} için BoardRow null!");
+                return;
+            }
+            // Kartı sıraya ekle
+            Debug.Log($"[GameManager] Kart oynanıyor: {card.name}, Sıra: {rowIndex}, Değer: {card.cardStats.cardValue}");
+            targetRow.AddCard(card, playerId);
             // EndTurnRPC'yi hemen çağırmak yerine sıranın değişmesi için bir kare bekleyelim
             if (PhotonNetwork.IsMasterClient)
             {
                 StartCoroutine(DelayedEndTurn());
             }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[GameManager] PlayCardRPC işlenirken hata oluştu: {e.Message}\n{e.StackTrace}");
         }
     }
     System.Collections.IEnumerator DelayedEndTurn()
