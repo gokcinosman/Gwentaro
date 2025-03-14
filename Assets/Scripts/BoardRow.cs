@@ -64,6 +64,24 @@ public class BoardRow : MonoBehaviour
                 .OnStart(() => card.transform.SetAsLastSibling());
         }
     }
+    public List<Card> GetAllCards()
+    {
+        List<Card> discardedCards = new List<Card>(cards);
+        return discardedCards;
+    }
+    public void ClearRow()
+    {
+        foreach (var card in cards)
+        {
+            // kartları discard edilecek yere taşı
+            if (card != null)
+            {
+                card.DiscardCard();
+            }
+        }
+        cards.Clear();
+        UpdateRowValue(0);
+    }
     public int GetTotalPower()
     {
         // Null kontrolü

@@ -7,6 +7,7 @@ public class CardStats : ScriptableObject
 {
     public CardType cardType;
     public CardClass cardClass;
+    public CardType targetRowType;
     public CardStatus cardStatue = CardStatus.Unit;
     public int cardValue;
     public string cardName;

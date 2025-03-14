@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.44657874, g: 0.49641275, b: 0.5748171, a: 1}
+  m_IndirectSpecularColor: {r: 0.44658792, g: 0.49642283, b: 0.5748252, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1919,11 +1919,12 @@ MonoBehaviour:
   joinRoomButton: {fileID: 1097956426}
   backFromLobbyButton: {fileID: 1435871478}
   roomNameInput: {fileID: 88531722}
-  playerNameInput: {fileID: 0}
   deckBuilderUI: {fileID: 278421988}
   backFromDeckBuilderButton: {fileID: 1436220627}
   backFromOptionsButton: {fileID: 241585036}
   statusText: {fileID: 887435497}
+  connectionPanel: {fileID: 0}
+  inGamePanel: {fileID: 0}
 --- !u!114 &278421988
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6423,6 +6424,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf2c173da28486e43929ecdc8bbbe9b0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  player1DiscardPile: []
+  player2DiscardPile: []
   enemyBoardObject: {fileID: 0}
   player1Deck: {fileID: 0}
   player2Deck: {fileID: 0}

@@ -144,7 +144,7 @@ public class Deck : MonoBehaviour
             Debug.LogError($"[Deck] cardViewID={cardViewID} için PhotonView bulunamadı!");
             return;
         }
-        Card card = cardView.GetComponent<Card>();
+        Card card = cardView.GetComponentInChildren<Card>();
         if (card == null)
         {
             Debug.LogError($"[Deck] cardViewID={cardViewID} için Card bileşeni bulunamadı!");
@@ -339,4 +339,9 @@ public class Deck : MonoBehaviour
     {
         public string[] cardNames;
     }
+    public int DrawCards(int cardCount)
+    {
+        return 0;
+    }
+    public void DrawInitialHand() { }
 }
