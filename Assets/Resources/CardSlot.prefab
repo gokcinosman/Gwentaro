@@ -663,9 +663,13 @@ MonoBehaviour:
   EndDragEvent:
     m_PersistentCalls:
       m_Calls: []
+  DiscardEvent:
+    m_PersistentCalls:
+      m_Calls: []
   selectionOffset: 50
   selected: 0
   isPlaced: 0
+  isDiscarded: 0
   cardStats: {fileID: 0}
 --- !u!114 &2701790370959320597
 MonoBehaviour:

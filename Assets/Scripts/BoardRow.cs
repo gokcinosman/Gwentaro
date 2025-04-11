@@ -5,7 +5,7 @@ using DG.Tweening;
 using UnityEngine.UI;
 public class BoardRow : MonoBehaviour
 {
-    public int ownerPlayerId; // Bu satırın hangi oyuncuya ait olduğunu belirler
+    public int ownerPlayerId;
     [SerializeField] private ScoreManager scoreManager;
     [SerializeField] private int rowScore;
     public CardType rowType;
@@ -13,7 +13,6 @@ public class BoardRow : MonoBehaviour
     public int RowIndex;
     private void Awake()
     {
-        // cards listesini başlat
         if (cards == null)
         {
             cards = new List<Card>();
@@ -21,24 +20,16 @@ public class BoardRow : MonoBehaviour
     }
     public void AddCard(Card card, int playerId)
     {
-        // Detaylı hata ayıklama bilgisi
-        Debug.Log($"[BoardRow] AddCard çağrıldı: card={card?.name ?? "null"}, playerId={playerId}");
-        // Null kontrolü
         if (card == null)
         {
             Debug.LogError("[BoardRow] AddCard metoduna null kart gönderildi!");
             return;
         }
-        // cards listesi kontrolü
         if (cards == null)
         {
-            // cards listesi null ise başlat
             cards = new List<Card>();
-            Debug.Log("[BoardRow] cards listesi başlatıldı.");
         }
-        // Kartı listeye ekle
         cards.Add(card);
-        // Kartı yerleştir
         card.GetComponent<Selectable>().enabled = false;
         card.RemoveFromDeck();
         card.transform.SetParent(transform);

@@ -204,14 +204,12 @@ public class GameManager : MonoBehaviourPun
     {
         if (playerId == 0) player1Passed = true;
         else if (playerId == 1) player2Passed = true;
-
         // Her iki oyuncu da pas geçtiyse, hemen round'u bitir
         if (player1Passed && player2Passed)
         {
             EndRound();
             return;
         }
-
         // Sıradaki oyuncunun zaten pas geçmiş olup olmadığını kontrol et
         int nextPlayer = (playerId + 1) % 2;
         if ((nextPlayer == 0 && player1Passed) || (nextPlayer == 1 && player2Passed))
@@ -220,7 +218,6 @@ public class GameManager : MonoBehaviourPun
             EndRound();
             return;
         }
-
         // Diğer oyuncu henüz pas geçmemişse, sırayı ona ver
         SetCurrentTurnPlayer(nextPlayer);
     }
@@ -349,7 +346,11 @@ public class GameManager : MonoBehaviourPun
                 Debug.LogError($"[GameManager] rowIndex={rowIndex} için BoardRow null!");
                 return;
             }
-            // Kartı sıraya ekle
+            if (card.cardStats.cardType != targetRow.rowType)
+            {
+                Debug.LogError($"[GameManager] Kart türü ({card.cardStats.cardType}) ve hedef sıra türü ({targetRow.rowType}) uyuşmuyor!");
+                return;
+            }
             Debug.Log($"[GameManager] Kart oynanıyor: {card.name}, Sıra: {rowIndex}, Değer: {card.cardStats.cardValue}");
             targetRow.AddCard(card, playerId);
             // EndTurnRPC'yi hemen çağırmak yerine sıranın değişmesi için bir kare bekleyelim
@@ -380,16 +381,12 @@ public class GameManager : MonoBehaviourPun
             }
         }
     }
-
     void EndRound()
     {
         if (gameOver) return;
-
         int player1Power = CalculateTotalPower(player1Rows);
         int player2Power = CalculateTotalPower(player2Rows);
-
         Debug.Log($"Round {currentRound} bitti: Player1 Power: {player1Power}, Player2 Power: {player2Power}");
-
         // Round kazananını belirle
         if (player1Power > player2Power)
         {
@@ -408,13 +405,10 @@ public class GameManager : MonoBehaviourPun
             player2Score++;
             Debug.Log($"Round {currentRound} berabere");
         }
-
         // Sonuçları UI'da göster
         UpdateScoreUI();
-
         // Kartları iskartaya çıkar
         DiscardRowCards();
-
         // Oyun bitişini kontrol et (2 round kazanan oyunu kazanır)
         if (player1Score == 2 || player2Score == 2)
         {
@@ -430,7 +424,6 @@ public class GameManager : MonoBehaviourPun
         gameOver = true;
         string winner = player1Score > player2Score ? "Player 1" : "Player 2";
         Debug.Log($"Oyun bitti. Kazanan: {winner}. Skor: {player1Score}-{player2Score}");
-
         // Zafer ekranını göster veya ana menüye dön
         ShowGameOverScreen(winner);
     }
@@ -443,7 +436,6 @@ public class GameManager : MonoBehaviourPun
         // UI'daki skor göstergelerini güncelle
         // Örnek: scoreUI.UpdateScore(player1Score, player2Score);
     }
-
     void DetermineFirstPlayerForNewRound()
     {
         // Gwent'te genellikle önceki roundu kaybeden oyuncu sonraki rounda başlar
@@ -452,12 +444,10 @@ public class GameManager : MonoBehaviourPun
             int lastRoundWinner = -1;
             int player1LastRoundPower = CalculateTotalPower(player1Rows);
             int player2LastRoundPower = CalculateTotalPower(player2Rows);
-
             if (player1LastRoundPower > player2LastRoundPower)
                 lastRoundWinner = 0;
             else if (player2LastRoundPower > player1LastRoundPower)
                 lastRoundWinner = 1;
-
             if (lastRoundWinner != -1)
             {
                 // Kaybeden başlar
@@ -465,12 +455,10 @@ public class GameManager : MonoBehaviourPun
                 return;
             }
         }
-
         // İlk round veya beraberlik durumunda rastgele seç
         int firstPlayer = Random.Range(0, 2);
         SetCurrentTurnPlayer(firstPlayer);
     }
-
     void DiscardRowCards()
     {
         foreach (var row in player1Rows)
@@ -478,7 +466,6 @@ public class GameManager : MonoBehaviourPun
             player1DiscardPile.AddRange(row.GetAllCards());
             row.ClearRow();
         }
-
         foreach (var row in player2Rows)
         {
             player2DiscardPile.AddRange(row.GetAllCards());
@@ -489,11 +476,9 @@ public class GameManager : MonoBehaviourPun
     {
         currentRound++;
         Debug.Log($"Round {currentRound} başlıyor");
-
         // Pas geçme durumlarını sıfırla
         player1Passed = false;
         player2Passed = false;
-
         // Oyunculara yeni kartlar dağıt (Gwent'te her round başında 3 kart çekilir, ilk round 10 kart)
         if (currentRound == 1)
         {
@@ -505,7 +490,6 @@ public class GameManager : MonoBehaviourPun
             player1Deck.DrawCards(1);  // Sonraki roundlarda 1 kart çek
             player2Deck.DrawCards(1);
         }
-
         // İlk turu belirle (genellikle önceki roundu kaybeden başlar)
         DetermineFirstPlayerForNewRound();
     }
@@ -523,11 +507,9 @@ public class GameManager : MonoBehaviourPun
         {
             switch (card.cardStats.cardClass)
             {
-
             }
         }
     }
-
     // Weather kartları genellikle belirli sıralardaki tüm kartların gücünü 1'e düşürür
     void ApplyWeatherEffect(Card weatherCard)
     {
@@ -540,7 +522,6 @@ public class GameManager : MonoBehaviourPun
             }
         }
     }
-
     // Spy kartları rakip taraftaki bir sıraya oynanır ve oyuncuya 2 kart çekme hakkı verir
     void ApplySpyEffect(Card spyCard, int playerId)
     {
@@ -550,18 +531,13 @@ public class GameManager : MonoBehaviourPun
         else
             player2Deck.DrawCards(2);
     }
-
     // Medic kartları iskartadaki bir kartı canlandırabilir
     void ApplyMedicEffect(Card medicCard, int playerId)
     {
-
     }
-
     // Scorch etkisi, oyun alanındaki en yüksek güce sahip kartları yok eder
     void ApplyScorchEffect()
     {
-
     }
     #endregion
-
 }
