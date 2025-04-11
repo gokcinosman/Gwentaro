@@ -12,6 +12,7 @@ public class Deck : MonoBehaviour
     [SerializeField] private GameObject slotPrefab;
     [SerializeField] private bool tweenCardReturn = true;
     [SerializeField] private PhotonView photonView;
+    [SerializeField] private RemaningCards remaningCardsDeck;
     bool isCrossing = false;
     private RectTransform rect;
     public int cardsToSpawn = 10;
@@ -23,6 +24,8 @@ public class Deck : MonoBehaviour
         {
             LoadSavedDeck(localPlayerId);
             StartCoroutine(Frame());
+            // Oyun başladığında rastgele 10 kart seç ve kalanları ıskarta yığınına gönder
+            Invoke("DrawInitialHand", 1.5f); // Kartlar oluşturulduktan sonra çalıştırmak için kısa bir gecikme
         }
         else
         {
@@ -343,5 +346,142 @@ public class Deck : MonoBehaviour
     {
         return 0;
     }
-    public void DrawInitialHand() { }
+    public void DrawInitialHand()
+    {
+        // Oyun başlangıcında yapılacak işlemler
+        // Dokunulmamış desteden rastgele 10 kart seç
+        SelectRandomCardsForGame();
+        // Başlangıç eli için diğer gerekli işlemler burada yapılabilir
+        Debug.Log("[Deck] Başlangıç eli hazırlandı.");
+    }
+    // Oyun başladığında rastgele 10 kart seç ve kalanları ıskarta yığınına gönder
+    public void SelectRandomCardsForGame()
+    {
+        if (cards == null || cards.Count == 0)
+            return;
+        // Tüm desteden rastgele 10 kart seç
+        // Seçilen kartlar elimizde kalacak, diğerleri dokunulmamış destede kalacak
+        if (cards.Count <= 10)
+        {
+            Debug.LogWarning("[Deck] Destede zaten 10 veya daha az kart var, tüm kartlar kullanılacak.");
+            return;
+        }
+        // Kartları karıştır
+        List<Card> shuffledCards = new List<Card>(cards);
+        for (int i = 0; i < shuffledCards.Count; i++)
+        {
+            int randomIndex = UnityEngine.Random.Range(i, shuffledCards.Count);
+            Card temp = shuffledCards[i];
+            shuffledCards[i] = shuffledCards[randomIndex];
+            shuffledCards[randomIndex] = temp;
+        }
+        // İlk 10 kartı elimize alacağız, geri kalanı dokunulmamış destede kalacak
+        List<Card> handCards = shuffledCards.GetRange(0, 10);
+        List<Card> remainingCards = shuffledCards.GetRange(10, shuffledCards.Count - 10);
+        // Kalan kartları dokunulmamış desteye taşı
+        foreach (Card remainingCard in remainingCards)
+        {
+            if (remainingCard != null && remainingCard.gameObject != null)
+            {
+                // Kart slotunu bul ve devre dışı bırak
+                remainingCard.gameObject.SetActive(false);
+                Transform cardSlot = remainingCard.transform.parent;
+                if (cardSlot != null)
+                {
+                    cardSlot.gameObject.SetActive(false);
+                }
+            }
+        }
+        // Aktif kart listesini güncelle (sadece el kartları)
+        cards.Clear();
+        cards.AddRange(handCards);
+        // Kalan kart sayısını RemainingCards nesnesine bildir
+        if (remaningCardsDeck != null)
+        {
+            remaningCardsDeck.SetRemainingCardsCount(remainingCards.Count);
+        }
+        else
+        {
+            Debug.LogError("[Deck] remaningCardsDeck referansı atanmamış!");
+        }
+        // Önce tüm aktif slotları bulalım
+        List<Transform> activeSlots = new List<Transform>();
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            Transform slot = transform.GetChild(i);
+            if (slot.gameObject.activeSelf)
+            {
+                activeSlots.Add(slot);
+            }
+        }
+        // El kartlarını sırayla aktif slotlara yerleştirelim
+        for (int i = 0; i < handCards.Count; i++)
+        {
+            if (handCards[i] != null && handCards[i].gameObject != null)
+            {
+                handCards[i].gameObject.SetActive(true);
+                // Kartı uygun slota taşı
+                if (i < activeSlots.Count)
+                {
+                    handCards[i].transform.SetParent(activeSlots[i]);
+                    handCards[i].transform.localPosition = Vector3.zero;
+                    activeSlots[i].gameObject.SetActive(true);
+                }
+                else if (i < transform.childCount)
+                {
+                    // Yeterli aktif slot yoksa, devre dışı olan slotları aktif et
+                    Transform slot = transform.GetChild(i);
+                    slot.gameObject.SetActive(true);
+                    handCards[i].transform.SetParent(slot);
+                    handCards[i].transform.localPosition = Vector3.zero;
+                }
+            }
+        }
+        Debug.Log($"[Deck] Oyun için {cards.Count} kart seçildi, {remainingCards.Count} kart dokunulmamış destede kaldı.");
+        // Görsel indeksleri güncelle
+        foreach (Card card in cards)
+        {
+            if (card.cardVisual != null)
+            {
+                card.cardVisual.UpdateIndex(cards.Count);
+            }
+        }
+    }
+    // Eli discard pile'a gönder (her el bitiminde çağrılabilir)
+    public void DiscardHand(DiscardPile discardPile)
+    {
+        if (discardPile == null)
+        {
+            discardPile = FindObjectOfType<DiscardPile>();
+            if (discardPile == null)
+            {
+                Debug.LogError("[Deck] Iskarta yığını bulunamadı!");
+                return;
+            }
+        }
+        // Elimizdeki tüm kartları ıskarta yığınına gönder
+        List<Card> cardsToDiscard = new List<Card>(cards);
+        foreach (Card card in cardsToDiscard)
+        {
+            // Kartı ıskarta yığınına ekle
+            discardPile.AddCard(card);
+            // Kartı elden çıkar
+            cards.Remove(card);
+            // Kart nesnesini scene'den gizle - görsel olarak devreden çıkar
+            if (card.gameObject != null)
+            {
+                if (card.transform.parent != null)
+                {
+                    // Eğer kart bir slot içindeyse, slot'u da devre dışı bırak
+                    Transform cardSlot = card.transform.parent;
+                    if (cardSlot.gameObject != null)
+                    {
+                        cardSlot.gameObject.SetActive(false);
+                    }
+                }
+                card.gameObject.SetActive(false);
+            }
+        }
+        Debug.Log($"[Deck] {cardsToDiscard.Count} kart ıskarta yığınına gönderildi.");
+    }
 }
