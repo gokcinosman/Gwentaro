@@ -29,13 +29,27 @@ public class BoardRow : MonoBehaviour
         {
             cards = new List<Card>();
         }
+        // Kartı zaten yerleştirilmiş olarak işaretle
+        card.isPlaced = true;
+        // Listede bu kart zaten varsa ekleme
+        if (cards.Contains(card))
+        {
+            Debug.LogWarning($"[BoardRow] {card.name} kartı zaten bu sırada bulunuyor!");
+            return;
+        }
+        // Kartı listeye ekle
         cards.Add(card);
+        // Seçilebilir özelliğini kapat
         card.GetComponent<Selectable>().enabled = false;
+        // Kartın Deck'ten çıkarılmasını sağla
         card.RemoveFromDeck();
+        // Kartı BoardRow'a taşı
         card.transform.SetParent(transform);
+        // Kartları yeniden düzenle
         RearrangeCards();
+        // Satır değerini güncelle
         UpdateRowValue(GetTotalPower());
-        Debug.Log($"[BoardRow] Kart başarıyla eklendi: {card.name}");
+        Debug.Log($"[BoardRow] Kart başarıyla eklendi: {card.name}, Satır: {rowType}, Değer: {card.cardStats.cardValue}");
     }
     private void RearrangeCards()
     {

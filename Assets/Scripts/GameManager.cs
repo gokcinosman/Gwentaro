@@ -323,6 +323,12 @@ public class GameManager : MonoBehaviourPun
                 Debug.LogError($"[GameManager] cardViewID={cardViewID} için Card bileşeni bulunamadı!");
                 return;
             }
+            // Kartın durumunu kontrol et
+            if (card.isPlaced || card.isDiscarded)
+            {
+                Debug.LogError($"[GameManager] Kart {card.name} zaten yerleştirilmiş veya ıskartaya atılmış!");
+                return;
+            }
             // Kart verilerini kontrol et
             if (card.cardStats == null)
             {
@@ -346,12 +352,14 @@ public class GameManager : MonoBehaviourPun
                 Debug.LogError($"[GameManager] rowIndex={rowIndex} için BoardRow null!");
                 return;
             }
+            // Kart tipi ve sıra tipi uyumluluğunu kontrol et
             if (card.cardStats.cardType != targetRow.rowType)
             {
                 Debug.LogError($"[GameManager] Kart türü ({card.cardStats.cardType}) ve hedef sıra türü ({targetRow.rowType}) uyuşmuyor!");
                 return;
             }
             Debug.Log($"[GameManager] Kart oynanıyor: {card.name}, Sıra: {rowIndex}, Değer: {card.cardStats.cardValue}");
+            // Kartı BoardRow'a yerleştir
             targetRow.AddCard(card, playerId);
             // EndTurnRPC'yi hemen çağırmak yerine sıranın değişmesi için bir kare bekleyelim
             if (PhotonNetwork.IsMasterClient)

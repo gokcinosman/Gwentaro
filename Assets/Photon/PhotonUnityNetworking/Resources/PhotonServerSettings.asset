@@ -58,6 +58,8 @@ MonoBehaviour:
   - SyncCardStats
   - RPC_DiscardCard
   - SyncCardCount
+  - RequestRemainingCardCount
+  - UpdateRemainingCardCount
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

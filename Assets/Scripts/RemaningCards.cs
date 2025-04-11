@@ -17,6 +17,7 @@ public class RemaningCards : MonoBehaviour
             GameObject cardBack = Instantiate(cardBackPrefab, transform);
             cardBack.transform.SetParent(transform);
             cardBack.transform.localPosition = new Vector3(0, i * offSetY, 0);
+            cardBack.transform.SetSiblingIndex(0);
             cardBacks.Add(cardBack);
         }
     }
@@ -35,12 +36,28 @@ public class RemaningCards : MonoBehaviour
     }
     public void SetRemainingCardsCount(int count)
     {
+        // Önce mevcut kart arka yüzlerini temizleyelim
+        ClearCardBacks();
+        // Yeni kart sayısını ayarla
         remainingCardsCount = count;
         UpdateRemainingCardsCount();
+        // Yeni kart arka yüzlerini oluştur
         CreateCardBacks(remainingCardsCount);
     }
     public void UpdateRemainingCardsCount()
     {
         remainingCardsText.text = remainingCardsCount.ToString();
+    }
+    // Mevcut tüm kart arka yüzlerini temizle
+    private void ClearCardBacks()
+    {
+        foreach (GameObject cardBack in cardBacks)
+        {
+            if (cardBack != null)
+            {
+                Destroy(cardBack);
+            }
+        }
+        cardBacks.Clear();
     }
 }

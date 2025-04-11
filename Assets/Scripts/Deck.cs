@@ -24,12 +24,17 @@ public class Deck : MonoBehaviour
         {
             LoadSavedDeck(localPlayerId);
             StartCoroutine(Frame());
-            // Oyun başladığında rastgele 10 kart seç ve kalanları ıskarta yığınına gönder
-            Invoke("DrawInitialHand", 1.5f); // Kartlar oluşturulduktan sonra çalıştırmak için kısa bir gecikme
+            // Kart seçimini hemen gerçekleştir, gecikme olmadan
+            SelectRandomCardsForGame();
         }
         else
         {
             StartCoroutine(WaitForCards());
+            // Diğer oyuncunun destesi için de RemainingCards'ı göster
+            if (remaningCardsDeck != null)
+            {
+                InitializeRemainingCardsForRemotePlayer();
+            }
         }
         SetDeckVisibility();
     }
@@ -277,28 +282,76 @@ public class Deck : MonoBehaviour
     {
         if (cards.Contains(card))
         {
+            // Burada card.isPlaced'ı kontrol et, zaten yerleştirilmişse işlemi atla
+            if (card.isPlaced)
+            {
+                Debug.Log($"[Deck] {card.name} kartı zaten yerleştirilmiş, desteden çıkarma işlemi atlanıyor.");
+                // Listeden çıkar ama düzenleme yapma
+                cards.Remove(card);
+                return;
+            }
+            // Kart nesnesini takip et
+            Debug.Log($"[Deck] {card.name} kartı desteden çıkarılıyor. Kart ID: {card.GetInstanceID()}");
+            // Kartı listeden çıkar
             cards.Remove(card);
+            // Kartların yerlerini yeniden düzenle
             RearrangeRemainingCards();
         }
     }
     private void RearrangeRemainingCards()
     {
         if (cards.Count == 0) return;
-        float cardWidth = cards[0].GetComponent<RectTransform>().rect.width;
-        float startX = -((cards.Count - 1) * cardWidth) / 2f;
-        for (int i = 0; i < cards.Count; i++)
+        // Aktif slot'ları ve kartları bul
+        List<Transform> activeSlots = new List<Transform>();
+        List<Card> activeCards = new List<Card>();
+        // Aktif kartları ve slotları topla
+        foreach (Card card in cards)
         {
-            if (cards[i] == null || cards[i].isPlaced) continue;
-            Transform targetSlot = transform.GetChild(i);
-            cards[i].transform.SetParent(targetSlot);
-            cards[i].transform.DOLocalMove(Vector3.zero, 0.3f)
-                .SetEase(Ease.OutBack);
+            if (card != null && !card.isPlaced && !card.isDiscarded)
+            {
+                activeCards.Add(card);
+            }
         }
-        // Kullanılmayan slot'ları sağa kaydır
-        for (int i = cards.Count; i < transform.childCount; i++)
+        // Aktif slotları bul
+        for (int i = 0; i < transform.childCount; i++)
         {
             Transform slot = transform.GetChild(i);
-            slot.SetAsLastSibling();
+            if (slot.gameObject.activeSelf)
+            {
+                activeSlots.Add(slot);
+            }
+        }
+        Debug.Log($"[Deck] RearrangeRemainingCards: Aktif kart sayısı: {activeCards.Count}, Aktif slot sayısı: {activeSlots.Count}");
+        // Aktif kartları aktif slotlara yerleştir
+        int slotIndex = 0;
+        foreach (Card card in activeCards)
+        {
+            if (slotIndex < activeSlots.Count)
+            {
+                // Kartı slota yerleştir
+                Transform slot = activeSlots[slotIndex];
+                card.transform.SetParent(slot);
+                card.transform.DOLocalMove(Vector3.zero, 0.3f)
+                    .SetEase(Ease.OutBack);
+                slotIndex++;
+            }
+        }
+        // Kullanılmayan slot'ları devre dışı bırak (kapatma yerine son sıraya al)
+        for (int i = activeCards.Count; i < transform.childCount; i++)
+        {
+            if (i < transform.childCount)
+            {
+                Transform slot = transform.GetChild(i);
+                slot.SetAsLastSibling();
+            }
+        }
+        // Tüm aktif kartların görsel indexlerini güncelle
+        foreach (Card card in activeCards)
+        {
+            if (card.cardVisual != null)
+            {
+                card.cardVisual.UpdateIndex(activeCards.Count);
+            }
         }
     }
     // Kaydedilmiş desteyi yükle
@@ -348,13 +401,64 @@ public class Deck : MonoBehaviour
     }
     public void DrawInitialHand()
     {
-        // Oyun başlangıcında yapılacak işlemler
-        // Dokunulmamış desteden rastgele 10 kart seç
-        SelectRandomCardsForGame();
-        // Başlangıç eli için diğer gerekli işlemler burada yapılabilir
-        Debug.Log("[Deck] Başlangıç eli hazırlandı.");
+        // Artık Start'ta çağrıldığı için tekrar çağrılmasına gerek yok
+        Debug.Log("[Deck] DrawInitialHand çağrıldı, ancak kartlar zaten seçilmiş durumda.");
     }
-    // Oyun başladığında rastgele 10 kart seç ve kalanları ıskarta yığınına gönder
+    // Diğer oyuncunun RemainingCards'ını başlat
+    private void InitializeRemainingCardsForRemotePlayer()
+    {
+        // Uzak oyuncu için varsayılan değerlerle başlat, daha sonra PhotonView ile senkronize edilecek
+        StartCoroutine(WaitForRemainingCards());
+    }
+    // Uzak oyuncunun kalan kart sayısını senkronize etmek için bekleme
+    private IEnumerator WaitForRemainingCards()
+    {
+        yield return new WaitForSeconds(1.5f);
+        // PhotonView ile kart sayıları diğer oyuncuya aktarılmış olmalı
+        // Diğer oyuncunun kalan kart sayısını RPC ile iste
+        photonView.RPC("RequestRemainingCardCount", RpcTarget.Others, PhotonNetwork.LocalPlayer.ActorNumber);
+    }
+    [PunRPC]
+    void RequestRemainingCardCount(int requestingPlayerActorNumber)
+    {
+        // Kendi kalan kart sayımızı RPC ile diğer oyuncuya bildir
+        int remainingCount = 0;
+        if (cards != null)
+        {
+            // Aktif kartları hariç tut, sadece dokunulmamış deste kartlarını say
+            remainingCount = FindInactiveCardCount();
+        }
+        // İsteyen oyuncuya kalan kart sayısını bildir
+        photonView.RPC("UpdateRemainingCardCount", RpcTarget.All, ownerPlayerId, remainingCount);
+    }
+    [PunRPC]
+    void UpdateRemainingCardCount(int playerIndex, int cardCount)
+    {
+        if (remaningCardsDeck != null)
+        {
+            // Sadece ilgili oyuncunun RemaningCards nesnesini güncelle
+            if (playerIndex == ownerPlayerId)
+            {
+                remaningCardsDeck.SetRemainingCardsCount(cardCount);
+                Debug.Log($"[Deck] Player{playerIndex}'ın kalan kart sayısı güncellendi: {cardCount}");
+            }
+        }
+    }
+    // Aktif olmayan kart sayısını bul
+    private int FindInactiveCardCount()
+    {
+        int inactiveCardCount = 0;
+        // Transform hiyerarşisinde aktif olmayan slot ve kart sayısını say
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            Transform slot = transform.GetChild(i);
+            if (!slot.gameObject.activeSelf)
+            {
+                inactiveCardCount++;
+            }
+        }
+        return inactiveCardCount;
+    }
     public void SelectRandomCardsForGame()
     {
         if (cards == null || cards.Count == 0)
@@ -395,10 +499,13 @@ public class Deck : MonoBehaviour
         // Aktif kart listesini güncelle (sadece el kartları)
         cards.Clear();
         cards.AddRange(handCards);
-        // Kalan kart sayısını RemainingCards nesnesine bildir
+        // Kalan kart sayısını RemainingCards nesnesine bildir ve RPC ile diğer oyunculara da gönder
+        int remainingCount = remainingCards.Count;
         if (remaningCardsDeck != null)
         {
-            remaningCardsDeck.SetRemainingCardsCount(remainingCards.Count);
+            remaningCardsDeck.SetRemainingCardsCount(remainingCount);
+            // Kalan kart sayısını tüm oyunculara bildir
+            photonView.RPC("UpdateRemainingCardCount", RpcTarget.Others, ownerPlayerId, remainingCount);
         }
         else
         {
